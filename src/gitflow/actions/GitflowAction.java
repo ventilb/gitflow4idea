@@ -13,6 +13,9 @@ import git4idea.repo.GitRepository;
 import gitflow.Gitflow;
 import gitflow.GitflowBranchUtil;
 import gitflow.GitflowConfigUtil;
+import gitflow.git.GitflowGitRepository;
+import gitflow.git.GitflowGitRepositoryUtil;
+import gitflow.intellij.ProjectAndContentRoots;
 import gitflow.ui.NotifyUtil;
 
 import java.util.ArrayList;
@@ -20,8 +23,13 @@ import java.util.ArrayList;
 public class GitflowAction extends DumbAwareAction {
     Project myProject;
     Gitflow myGitflow = ServiceManager.getService(Gitflow.class);
+    @Deprecated
     ArrayList<GitRepository> repos = new ArrayList<GitRepository>();
+    @Deprecated
     GitRepository repo;
+
+    protected GitflowGitRepository gitflowGitRepository;
+
     GitflowBranchUtil branchUtil;
 
     VirtualFileManager virtualFileMananger;
@@ -41,11 +49,15 @@ public class GitflowAction extends DumbAwareAction {
 
     @Override
     public void actionPerformed(AnActionEvent e) {
+
         virtualFileMananger = VirtualFileManager.getInstance();
         myProject=e.getProject();
         branchUtil=new GitflowBranchUtil(myProject);
         repo = GitBranchUtil.getCurrentRepository(myProject);
         repos.add(repo);
+
+        final ProjectAndContentRoots projectAndContentRoots = GitflowGitRepositoryUtil.getAllProjectContentRoots(this.myProject);
+        this.gitflowGitRepository = GitflowGitRepositoryUtil.getAllGitRepositories(projectAndContentRoots);
 
         if (repo!=null){
             currentBranchName= GitBranchUtil.getBranchNameOrRev(repo);
@@ -97,5 +109,41 @@ public class GitflowAction extends DumbAwareAction {
         }
 
 
+    }
+
+    public void setProject(Project myProject) {
+        this.myProject = myProject;
+    }
+
+    public void setBranchUtil(GitflowBranchUtil branchUtil) {
+        this.branchUtil = branchUtil;
+    }
+
+    public void setVirtualFileMananger(VirtualFileManager virtualFileMananger) {
+        this.virtualFileMananger = virtualFileMananger;
+    }
+
+    public void setGitflowGitRepository(GitflowGitRepository gitflowGitRepository) {
+        this.gitflowGitRepository = gitflowGitRepository;
+    }
+
+    public void setFeaturePrefix(String featurePrefix) {
+        this.featurePrefix = featurePrefix;
+    }
+
+    public void setReleasePrefix(String releasePrefix) {
+        this.releasePrefix = releasePrefix;
+    }
+
+    public void setHotfixPrefix(String hotfixPrefix) {
+        this.hotfixPrefix = hotfixPrefix;
+    }
+
+    public void setMasterBranch(String masterBranch) {
+        this.masterBranch = masterBranch;
+    }
+
+    public void setDevelopBranch(String developBranch) {
+        this.developBranch = developBranch;
     }
 }
