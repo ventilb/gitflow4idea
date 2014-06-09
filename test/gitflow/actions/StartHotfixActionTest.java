@@ -25,8 +25,6 @@ import java.util.Set;
  */
 public class StartHotfixActionTest extends JavaCodeInsightFixtureTestCase {
 
-    private final Set<File> filesCreatedDuringTest = new HashSet<File>();
-
     @Test
     public void testPerformStartHotfixCommand() throws Exception {
         // Testfix erstellen
@@ -38,8 +36,8 @@ public class StartHotfixActionTest extends JavaCodeInsightFixtureTestCase {
         TestUtils.enableGitflow(projectGitRepository, this.gitflowInitOptions);
         TestUtils.enableGitflow(module1GitRepository, this.gitflowInitOptions);
 
-        this.filesCreatedDuringTest.add(TestUtils.addAndCommitTestfile(projectGitRepository.getRoot()));
-        this.filesCreatedDuringTest.add(TestUtils.addAndCommitTestfile(module1GitRepository.getRoot()));
+        TestUtils.addAndCommitTestfile(projectGitRepository.getRoot());
+        TestUtils.addAndCommitTestfile(module1GitRepository.getRoot());
 
         final GitflowGitRepository gitflowGitRepository = new GitflowGitRepository();
         gitflowGitRepository.addGitRepository(projectGitRepository);
