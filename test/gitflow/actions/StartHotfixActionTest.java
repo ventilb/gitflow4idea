@@ -71,26 +71,11 @@ public class StartHotfixActionTest extends JavaCodeInsightFixtureTestCase {
 
         this.gitflowInitOptions = new GitflowInitOptions();
         this.gitflowInitOptions.setUseDefaults(true);
-//        gitflowInitOptions.setDevelopmentBranch("master");
-//        gitflowInitOptions.setProductionBranch("production");
-//        gitflowInitOptions.setFeaturePrefix("feature-");
-//        gitflowInitOptions.setHotfixPrefix("hotfix-");
-//        gitflowInitOptions.setReleasePrefix("release-");
-//        gitflowInitOptions.setSupportPrefix("support-");
-//        gitflowInitOptions.setVersionPrefix("");
-//        gitflowInitOptions.setUseDefaults(false);
-
     }
 
     @Override
     public void tearDown() throws Exception {
         this.testFixture1.tearDown();
-
-//        for (File file : this.filesCreatedDuringTest) {
-//            if (file.exists()) {
-//                file.delete();
-//            }
-//        }
     }
 
 }
