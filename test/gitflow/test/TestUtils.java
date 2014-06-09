@@ -1,5 +1,6 @@
 package gitflow.test;
 
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
@@ -14,8 +15,12 @@ import com.intellij.testFramework.fixtures.JavaCodeInsightTestFixture;
 import com.intellij.testFramework.fixtures.ModuleFixture;
 import com.intellij.testFramework.fixtures.TestFixtureBuilder;
 import git4idea.GitUtil;
+import git4idea.repo.GitRepository;
+import gitflow.Gitflow;
+import gitflow.GitflowInitOptions;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
+import org.junit.Assert;
 
 import java.io.*;
 import java.util.Arrays;
@@ -24,6 +29,8 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isEmptyString;
+import static org.junit.Assert.*;
 
 /**
  * Provides some generic test helper methods.
@@ -37,14 +44,14 @@ public class TestUtils {
     public static ModuleFixture newProjectModuleFixture(final JavaCodeInsightTestFixture testFixture, final TestFixtureBuilder<IdeaProjectTestFixture> ideaProjectBuilder, final String moduleName) throws IOException {
         final JavaModuleFixtureBuilder moduleFixtureBuilder = ideaProjectBuilder.addModule(JavaModuleFixtureBuilder.class);
         moduleFixtureBuilder.setLanguageLevel(LanguageLevel.JDK_1_6);
-        final String contentRoot = testFixture.getTempDirPath() + File.pathSeparator + moduleName;
+        final String contentRoot = testFixture.getTempDirPath();// + File.pathSeparator + moduleName;
 
         final File file = new File(contentRoot);
         if (!file.exists()) {
             assertThat(file.mkdirs(), is(true));
         }
 
-        final ModuleFixture moduleFixture = moduleFixtureBuilder.addContentRoot(contentRoot).addSourceRoot("src").getFixture();
+        final ModuleFixture moduleFixture = moduleFixtureBuilder.addContentRoot(contentRoot).getFixture();
         return moduleFixture;
     }
 
@@ -54,15 +61,23 @@ public class TestUtils {
 
     // Gitflow helpers ////////////////////////////////////////////////////////
 
-    // Git command helpers ////////////////////////////////////////////////////
-
-    public static String listGitConfig(final VirtualFile gitDir) throws IOException {
-        return performConsoleGitCommand(gitDir.getCanonicalPath(), "config", "--list");
+    public static void enableGitflow(final GitRepository gitRepository, final GitflowInitOptions gitflowInitOptions) {
+        Gitflow gitflow = ServiceManager.getService(Gitflow.class);
+        gitflow.initRepo(gitRepository, gitflowInitOptions);
     }
 
-    public static void initGitRepo(final Project project, final VirtualFile virtualFile) throws IOException {
-        final String canonicalPath = virtualFile.getCanonicalPath();
-        initGitRepo(canonicalPath);
+    // Git command helpers ////////////////////////////////////////////////////
+
+    public static String listGitConfig(final VirtualFile repositoryRoot) throws IOException {
+        return performConsoleGitCommand(repositoryRoot.getCanonicalPath(), "config", "--list");
+    }
+
+    public static File addAndCommitTestfile(final VirtualFile repositoryRoot) throws IOException {
+        final File testfileCreated = new File(repositoryRoot.getCanonicalPath(), "ATestFile.txt");
+        assertThat(testfileCreated.createNewFile(), is(true));
+
+        performConsoleGitCommand(repositoryRoot.getCanonicalPath(), "add", testfileCreated.getCanonicalPath());
+        performConsoleGitCommand(repositoryRoot.getCanonicalPath(), "commit", "-m", "'* addAndCommitTestfile() performed'");
 
         /*
         Wir haben hier an Intellij vorbei ganz simpel einen Git-Befehl als Prozess abgesetzt. Daher kann das virtuelle
@@ -71,39 +86,60 @@ public class TestUtils {
          */
         syncFileSystem();
 
+        testfileCreated.deleteOnExit();
+        return testfileCreated;
+    }
+
+    public static void initGitRepo(final Project project, final VirtualFile virtualFile) throws IOException {
+        final String canonicalPath = virtualFile.getCanonicalPath();
+        initGitRepo(canonicalPath);
+
         ProjectLevelVcsManager projectLevelVcsManager = ProjectLevelVcsManager.getInstance(project);
         projectLevelVcsManager.setDirectoryMapping(virtualFile.getCanonicalPath(), "Git");
     }
 
     public static void initGitRepo(final String canonicalPath) throws IOException {
-        performConsoleGitCommand(canonicalPath + "/.git", "init", canonicalPath);
+        performConsoleGitCommand(canonicalPath, "init", canonicalPath);
+
+        /*
+        Wir haben hier an Intellij vorbei ganz simpel einen Git-Befehl als Prozess abgesetzt. Daher kann das virtuelle
+        Dateisystem von Intellij und das echte Dateisystem nun nicht mehr synchron sein. Für unseren Test müssen wir
+        die Dateisysteme abgleichen.
+         */
+        syncFileSystem();
     }
 
     public static String performConsoleGitCommand(final String gitDir, @NotNull final String command, @NotNull String... arguments) throws IOException {
         final List<String> args = new LinkedList<String>();
         args.add("git");
-        args.add("--git-dir");
-        args.add(gitDir);
         args.add(command);
         args.addAll(Arrays.asList(arguments));
-        Process p = Runtime.getRuntime().exec(args.toArray(new String[args.size()]));
+        Process p = Runtime.getRuntime().exec(args.toArray(new String[args.size()]), null, new File(gitDir));
 
-        StringBuilder sb = new StringBuilder();
-
+        final StringBuilder stdinValue = new StringBuilder();
         final InputStream stdin = p.getInputStream();
-        BufferedReader br = new BufferedReader(new InputStreamReader(stdin));
+        BufferedReader stdinBufferedReader = new BufferedReader(new InputStreamReader(stdin));
         String line;
-        while ((line = br.readLine()) != null) {
-            sb.append(line).append("\n");
+        while ((line = stdinBufferedReader.readLine()) != null) {
+            stdinValue.append(line).append("\n");
         }
+
+        final StringBuilder stderrValue = new StringBuilder();
+        final InputStream stderr = p.getErrorStream();
+        BufferedReader stderrBufferedReader = new BufferedReader(new InputStreamReader(stderr));
+        while ((line = stderrBufferedReader.readLine()) != null) {
+            stderrValue.append(line).append("\n");
+        }
+
+        assertThat(stderrValue.toString(), is(isEmptyString()));
 
         try {
             p.waitFor();
         } catch (InterruptedException e) {
-            throw new IOException("Process interrupted", e);
+            fail("Should not have caught InterruptedException");
         }
 
-        return sb.toString();
+        return stdinValue.toString();
     }
 
     public static void deleteProjectGitDir(final VirtualFile projectBaseDir) throws IOException {

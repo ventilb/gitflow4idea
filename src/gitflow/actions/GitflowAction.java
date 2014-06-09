@@ -15,7 +15,7 @@ import gitflow.GitflowBranchUtil;
 import gitflow.GitflowConfigUtil;
 import gitflow.git.GitflowGitRepository;
 import gitflow.git.GitflowGitRepositoryUtil;
-import gitflow.intellij.ProjectAndContentRoots;
+import gitflow.intellij.ProjectAndModules;
 import gitflow.ui.NotifyUtil;
 
 import java.util.ArrayList;
@@ -35,12 +35,18 @@ public class GitflowAction extends DumbAwareAction {
     VirtualFileManager virtualFileMananger;
 
 
+    @Deprecated
     String currentBranchName;
 
+    @Deprecated
     String featurePrefix;
+    @Deprecated
     String releasePrefix;
+    @Deprecated
     String hotfixPrefix;
+    @Deprecated
     String masterBranch;
+    @Deprecated
     String developBranch;
 
     GitflowAction(String actionName){
@@ -56,8 +62,8 @@ public class GitflowAction extends DumbAwareAction {
         repo = GitBranchUtil.getCurrentRepository(myProject);
         repos.add(repo);
 
-        final ProjectAndContentRoots projectAndContentRoots = GitflowGitRepositoryUtil.getAllProjectContentRoots(this.myProject);
-        this.gitflowGitRepository = GitflowGitRepositoryUtil.getAllGitRepositories(projectAndContentRoots);
+        final ProjectAndModules projectAndModules = GitflowGitRepositoryUtil.getAllProjectContentRoots(this.myProject);
+        this.gitflowGitRepository = GitflowGitRepositoryUtil.getAllGitRepositories(projectAndModules);
 
         if (repo!=null){
             currentBranchName= GitBranchUtil.getBranchNameOrRev(repo);
@@ -127,23 +133,4 @@ public class GitflowAction extends DumbAwareAction {
         this.gitflowGitRepository = gitflowGitRepository;
     }
 
-    public void setFeaturePrefix(String featurePrefix) {
-        this.featurePrefix = featurePrefix;
-    }
-
-    public void setReleasePrefix(String releasePrefix) {
-        this.releasePrefix = releasePrefix;
-    }
-
-    public void setHotfixPrefix(String hotfixPrefix) {
-        this.hotfixPrefix = hotfixPrefix;
-    }
-
-    public void setMasterBranch(String masterBranch) {
-        this.masterBranch = masterBranch;
-    }
-
-    public void setDevelopBranch(String developBranch) {
-        this.developBranch = developBranch;
-    }
 }

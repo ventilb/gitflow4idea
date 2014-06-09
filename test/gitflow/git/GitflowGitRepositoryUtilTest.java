@@ -1,11 +1,8 @@
 package gitflow.git;
 
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.fixtures.*;
-import git4idea.GitUtil;
-import git4idea.repo.GitRepositoryManager;
-import gitflow.intellij.ProjectAndContentRoots;
+import gitflow.fixtures.TestFixture1;
+import gitflow.intellij.ProjectAndModules;
 import gitflow.test.TestUtils;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -25,19 +22,19 @@ public class GitflowGitRepositoryUtilTest extends JavaCodeInsightFixtureTestCase
         // Testfix erstellen
 
         // Test durchführen
-        ProjectAndContentRoots allProjectContentRoots = GitflowGitRepositoryUtil.getAllProjectContentRoots(getProject());
+        ProjectAndModules allProjectContentRoots = GitflowGitRepositoryUtil.getAllProjectContentRoots(this.testFixture1.project);
 
         // Test auswerten
         assertThat(allProjectContentRoots.getAllContentRoots(), hasSize(2));
-        assertThat(allProjectContentRoots.getProjectBaseDir(), is(this.projectBaseDir));
-        assertThat(allProjectContentRoots.getContentRoots()[0], is(this.module1ContentRoot));
+        assertThat(allProjectContentRoots.getProjectBaseDir(), is(this.testFixture1.projectBaseDir));
+        assertThat(allProjectContentRoots.getModuleContentRoots().get(0), is(this.testFixture1.module1ContentRoot));
     }
 
     public void testGetAllGitRepositories() throws Exception {
         // Testfix erstellen
-        ProjectAndContentRoots allProjectContentRoots = GitflowGitRepositoryUtil.getAllProjectContentRoots(getProject());
-        TestUtils.initGitRepo(getProject(), allProjectContentRoots.getProjectBaseDir());
-        TestUtils.initGitRepo(getProject(), allProjectContentRoots.getContentRoots()[0]);
+        ProjectAndModules allProjectContentRoots = GitflowGitRepositoryUtil.getAllProjectContentRoots(this.testFixture1.project);
+        TestUtils.initGitRepo(this.testFixture1.project, allProjectContentRoots.getProjectBaseDir());
+        TestUtils.initGitRepo(this.testFixture1.project, allProjectContentRoots.getModuleContentRoots().get(0));
 
         // Test durchführen
         GitflowGitRepository gitflowGitRepository = GitflowGitRepositoryUtil.getAllGitRepositories(allProjectContentRoots);
@@ -46,54 +43,17 @@ public class GitflowGitRepositoryUtilTest extends JavaCodeInsightFixtureTestCase
         assertThat(gitflowGitRepository.getRepositoryCount(), is(2));
     }
 
-    // Testfixture ////////////////////////////////////////////////////////////
-
-    private VirtualFile projectBaseDir;
-
-    private Module module1;
-
-    private VirtualFile module1ContentRoot;
+    private TestFixture1 testFixture1;
 
     @Override
     public void setUp() throws Exception {
-        /*
-        @see http://devnet.jetbrains.com/message/5492192#5492192
-         */
-
-        final TestFixtureBuilder<IdeaProjectTestFixture> projectBuilder = JavaTestFixtureFactory.createFixtureBuilder(getName());
-
-        myFixture = JavaTestFixtureFactory.getFixtureFactory().createCodeInsightFixture(projectBuilder.getFixture());
-        myFixture.setTestDataPath(getTestDataPath());
-
-        // repeat the following line for each module
-        final ModuleFixture moduleFixture1 = TestUtils.newProjectModuleFixture(myFixture, projectBuilder, "module1");
-
-        /*
-        Dieser Aufruf ist wichtig, da sonst der Test mit einem Assertion-Fehler abschmiert.
-         */
-        myFixture.setUp();
-
-        this.projectBaseDir = getProject().getBaseDir();
-
-        this.module1 = moduleFixture1.getModule();
-        this.module1ContentRoot = TestUtils.getModuleContentRoot(this.module1);
-
-        getProject().save();
+        this.testFixture1 = new TestFixture1(this);
+        this.testFixture1.setUp();
     }
 
     @Override
     public void tearDown() throws Exception {
-        /*
-        Wir müssen hier den GitRepositoryManager explizit wegwerfen da es sonst zu Fehlern beim Abräumen des
-        Testfixtures kommt.
-         */
-        final GitRepositoryManager manager = GitUtil.getRepositoryManager(getProject());
-        manager.dispose();
-
-        myFixture.tearDown();
-
-        TestUtils.deleteProjectGitDir(this.projectBaseDir);
-        TestUtils.deleteModuleDir(this.module1ContentRoot);
+        this.testFixture1.tearDown();
     }
 
 }

@@ -5,6 +5,8 @@ import git4idea.commands.GitCommandResult;
 import git4idea.commands.GitLineHandlerListener;
 import git4idea.repo.GitRemote;
 import git4idea.repo.GitRepository;
+import gitflow.git.GitflowGitCommandResult;
+import gitflow.git.GitflowGitRepository;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -66,7 +68,7 @@ public interface Gitflow extends Git {
 
     //hotfix
 
-    GitCommandResult startHotfix(@NotNull GitRepository repository,
+    GitflowGitCommandResult startHotfix(@NotNull GitflowGitRepository repository,
                                  @NotNull String hotfixName,
                                  @Nullable GitLineHandlerListener... listeners);
 

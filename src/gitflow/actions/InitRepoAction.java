@@ -32,7 +32,7 @@ public class InitRepoAction extends GitflowAction {
         if (optionsDialog.isOK()) {
             final GitflowInitOptions initOptions = optionsDialog.getOptions();
 
-            new Task.Backgroundable(myProject,"Initializing repo",false){
+            new Task.Backgroundable(this.myProject, "Initializing repo", false) {
                 @Override
                 public void run(@NotNull ProgressIndicator indicator) {
                     performInitReposCommand(gitflowGitRepository, initOptions);
@@ -42,10 +42,10 @@ public class InitRepoAction extends GitflowAction {
     }
 
     protected void performInitReposCommand(final GitflowGitRepository repo, final GitflowInitOptions initOptions) {
+        final GitflowErrorsListener errorLineHandler = new GitflowErrorsListener(myProject);
+        final LineHandler localLineHandler = new LineHandler();
 
         for (GitRepository gitRepository : repo.gitRepositories()) {
-            final GitflowErrorsListener errorLineHandler = new GitflowErrorsListener(myProject);
-            final LineHandler localLineHandler = new LineHandler();
             performInitRepoCommand(gitRepository, initOptions, localLineHandler, errorLineHandler);
         }
     }
@@ -65,15 +65,10 @@ public class InitRepoAction extends GitflowAction {
         repo.update();
     }
 
-    protected void performInitRepoCommand(final GitflowInitOptions initOptions, final GitflowLineHandler localLineHandler, final GitflowLineHandler errorLineHandler) {
-        GitRepository repo = this.gitflowGitRepository.getFirstGitRepository();
-        performInitRepoCommand(repo, initOptions, localLineHandler, errorLineHandler);
-    }
-
     private class LineHandler extends GitflowLineHandler {
         @Override
         public void onLineAvailable(String line, Key outputType) {
-            if (line.contains("Already initialized for gitflow")){
+            if (line.contains("Already initialized for gitflow")) {
                 myErrors.add("Repo already initialized for gitflow");
             }
 

@@ -3,6 +3,8 @@ package gitflow;
 import git4idea.commands.*;
 import git4idea.repo.GitRemote;
 import git4idea.repo.GitRepository;
+import gitflow.git.GitflowGitCommandResult;
+import gitflow.git.GitflowGitRepository;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -292,6 +294,19 @@ public class GitflowImpl extends GitImpl implements Gitflow {
 
 
     //hotfix
+
+    public GitflowGitCommandResult startHotfix(@NotNull GitflowGitRepository gitflowGitRepository, @NotNull String hotfixName,
+                            @Nullable GitLineHandlerListener... listeners) {
+        final GitflowGitCommandResult gitflowGitCommandResult = new GitflowGitCommandResult();
+
+        GitCommandResult gitCommandResult;
+        for (GitRepository gitRepository : gitflowGitRepository.gitRepositories()) {
+            gitCommandResult = startHotfix(gitRepository, hotfixName, listeners);
+            gitflowGitCommandResult.setGitCommandResultForGitRepository(gitRepository, gitCommandResult);
+        }
+
+        return gitflowGitCommandResult;
+    }
 
     public GitCommandResult startHotfix(@NotNull GitRepository repository,
                                         @NotNull String hotfixName,

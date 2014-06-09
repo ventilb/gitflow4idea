@@ -16,6 +16,12 @@ import gitflow.ui.NotifyUtil;
 
 public class GitflowConfigUtil {
 
+    public static final String DEFAULT_BRANCH_MASTER = "master";
+
+    public static final String DEFAULT_BRANCH_DEVELOP = "develop";
+
+    public static final String DEFAULT_PREFIX_HOTFIX = "hotfix/";
+
     public static final String BRANCH_MASTER = "gitflow.branch.master";
     public static final String BRANCH_DEVELOP = "gitflow.branch.develop";
     public static final String PREFIX_FEATURE = "gitflow.prefix.feature";
@@ -24,6 +30,7 @@ public class GitflowConfigUtil {
     public static final String PREFIX_SUPPORT = "gitflow.prefix.support";
     public static final String PREFIX_VERSIONTAG = "gitflow.prefix.versiontag";
 
+    @Deprecated
     public static String getMasterBranch(Project project) {
         GitRepository repo = GitBranchUtil.getCurrentRepository(project);
         VirtualFile root = repo.getRoot();
@@ -38,6 +45,21 @@ public class GitflowConfigUtil {
         return masterBranch;
     }
 
+    public static String getMasterBranch(final GitRepository repo) {
+        final Project project = repo.getProject();
+        final VirtualFile root = repo.getRoot();
+
+        String masterBranch = null;
+        try {
+            masterBranch = GitConfigUtil.getValue(project, root, BRANCH_MASTER);
+        } catch (VcsException e) {
+            configErrorInGitRepository(repo, BRANCH_MASTER, e);
+        }
+
+        return masterBranch;
+    }
+
+    @Deprecated
     public static String getDevelopBranch(Project project) {
         GitRepository repo = GitBranchUtil.getCurrentRepository(project);
         VirtualFile root = repo.getRoot();
@@ -46,12 +68,27 @@ public class GitflowConfigUtil {
         try {
             developBranch = GitConfigUtil.getValue(project, root, BRANCH_DEVELOP);
         } catch (VcsException e) {
-            NotifyUtil.notifyError(project, "Config error", e);
+            configErrorInGitRepository(repo, BRANCH_MASTER, e);
         }
 
         return developBranch;
     }
 
+    public static String getDevelopBranch(final GitRepository repo) {
+        final Project project = repo.getProject();
+        final VirtualFile root = repo.getRoot();
+
+        String developBranch = null;
+        try {
+            developBranch = GitConfigUtil.getValue(project, root, BRANCH_DEVELOP);
+        } catch (VcsException e) {
+            configErrorInGitRepository(repo, BRANCH_MASTER, e);
+        }
+
+        return developBranch;
+    }
+
+    @Deprecated
     public static String getFeaturePrefix(Project project) {
         GitRepository repo = GitBranchUtil.getCurrentRepository(project);
         VirtualFile root = repo.getRoot();
@@ -66,6 +103,11 @@ public class GitflowConfigUtil {
         return featurePrefix;
     }
 
+    public static String getFeaturePrefix(final GitRepository repo) {
+        return getGitflowPrefix(repo, PREFIX_FEATURE);
+    }
+
+    @Deprecated
     public static String getReleasePrefix(Project project) {
         GitRepository repo = GitBranchUtil.getCurrentRepository(project);
         VirtualFile root = repo.getRoot();
@@ -80,6 +122,11 @@ public class GitflowConfigUtil {
         return releasePrefix;
     }
 
+    public static String getReleasePrefix(final GitRepository repo) {
+        return getGitflowPrefix(repo, PREFIX_RELEASE);
+    }
+
+    @Deprecated
     public static String getHotfixPrefix(Project project) {
         GitRepository repo = GitBranchUtil.getCurrentRepository(project);
         VirtualFile root = repo.getRoot();
@@ -92,6 +139,14 @@ public class GitflowConfigUtil {
             NotifyUtil.notifyError(project, "Config error", e);
         }
         return hotfixPrefix;
+    }
+
+    public static String getHotfixPrefix(final GitRepository repo) {
+        return getGitflowPrefix(repo, PREFIX_HOTFIX);
+    }
+
+    public static String getSupportPrefix(final GitRepository repo) {
+        return getGitflowPrefix(repo, PREFIX_SUPPORT);
     }
 
     public static String getFeatureNameFromBranch(Project project, String branchName) {
@@ -127,7 +182,7 @@ public class GitflowConfigUtil {
         try {
             GitConfigUtil.setValue(project, root, BRANCH_MASTER, branchName);
         } catch (VcsException e) {
-            configErrorInGitRepository(repo, e);
+            configErrorInGitRepository(repo, BRANCH_MASTER, e);
         }
     }
 
@@ -144,7 +199,7 @@ public class GitflowConfigUtil {
         try {
             GitConfigUtil.setValue(project, root, BRANCH_DEVELOP, branchName);
         } catch (VcsException e) {
-            configErrorInGitRepository(repo, e);
+            configErrorInGitRepository(repo, BRANCH_DEVELOP, e);
         }
     }
 
@@ -182,15 +237,37 @@ public class GitflowConfigUtil {
         try {
             GitConfigUtil.setValue(project, root, prefixKey, prefixValue);
         } catch (VcsException e) {
-            configErrorInGitRepository(repo, e);
+            configErrorInGitRepository(repo, prefixKey, e);
         }
     }
 
-    protected static void configErrorInGitRepository(final GitRepository repo, final Exception cause) {
+    /**
+     * Gets the gitflow prefix value to the specified gitflow prefix key in the specified git repository. Returns NULL
+     * if the value was not found.
+     *
+     * @param repo      The git repository
+     * @param prefixKey The prefix key
+     * @return The prefix value
+     */
+    protected static String getGitflowPrefix(final GitRepository repo, final String prefixKey) {
         final Project project = repo.getProject();
         final VirtualFile root = repo.getRoot();
 
-        final String errMsg = String.format("Config error in git repository %s", root.getCanonicalPath());
+        String featureValue = null;
+
+        try {
+            featureValue = GitConfigUtil.getValue(project, root, prefixKey);
+        } catch (VcsException e) {
+            configErrorInGitRepository(repo, prefixKey, e);
+        }
+        return featureValue;
+    }
+
+    protected static void configErrorInGitRepository(final GitRepository repo, String gitflowKey, final Exception cause) {
+        final Project project = repo.getProject();
+        final VirtualFile root = repo.getRoot();
+
+        final String errMsg = String.format("Config error in gitflow key '%s' in git repository root '%s'", gitflowKey, root.getCanonicalPath());
         NotifyUtil.notifyError(project, errMsg, cause);
     }
 }

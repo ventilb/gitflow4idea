@@ -39,6 +39,14 @@ public class GitflowBranchUtil {
         prefixHotfix = GitflowConfigUtil.getHotfixPrefix(project);
     }
 
+    public GitflowBranchUtil(final GitRepository gitRepository) {
+        this.repo = gitRepository;
+        this.myProject = gitRepository.getProject();
+
+        this.currentBranchName = GitBranchUtil.getBranchNameOrRev(this.repo);
+        branchnameMaster= GitflowConfigUtil.getMasterBranch(this.repo);
+    }
+
     public boolean hasGitflow(){
         boolean hasGitflow=false;
         hasGitflow=GitflowConfigUtil.getMasterBranch(myProject)!=null

@@ -1,12 +1,17 @@
 package gitflow.test;
 
 import com.intellij.openapi.vfs.VirtualFile;
+import git4idea.GitLocalBranch;
+import git4idea.branch.GitBranchUtil;
 import git4idea.repo.GitRepository;
 import gitflow.GitflowConfigUtil;
 
 import java.io.IOException;
+import java.util.Collection;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
 /**
@@ -16,6 +21,19 @@ import static org.hamcrest.Matchers.is;
  * @since 08.06.14 - 16:02
  */
 public class GitflowAsserts {
+
+    public static void assertDefaultCurrentHotfixBranchName(final GitRepository gitRepository, final String hotfixName) throws Exception {
+        final GitLocalBranch currentBranch = gitRepository.getCurrentBranch();
+        final String expectedHotfixBranchName = GitflowConfigUtil.DEFAULT_PREFIX_HOTFIX + hotfixName;
+
+        assertThat(currentBranch.getName(), is(expectedHotfixBranchName));
+    }
+
+    public static void assertDefaultGitflowBranchNamesAndHotfix(final GitRepository gitRepository, final String hotfixName) throws Exception {
+        Collection<String> branches = GitBranchUtil.getBranches(gitRepository.getProject(), gitRepository.getRoot(), true, false, null);
+        assertThat(branches, hasSize(3));
+        assertThat(branches, containsInAnyOrder(GitflowConfigUtil.DEFAULT_BRANCH_MASTER, GitflowConfigUtil.DEFAULT_BRANCH_DEVELOP, GitflowConfigUtil.DEFAULT_PREFIX_HOTFIX + hotfixName));
+    }
 
     public static void assertGitflowBranchNames(final GitRepository gitRepository, final String expectedGiflowProductionBranchName, final String expectedGiflowDevelopmentBranchName) throws Exception {
         final VirtualFile gitDir = gitRepository.getGitDir();
