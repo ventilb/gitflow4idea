@@ -19,18 +19,19 @@ import git4idea.repo.GitRepository;
 import gitflow.Gitflow;
 import gitflow.GitflowInitOptions;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.jetbrains.annotations.NotNull;
-import org.junit.Assert;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyString;
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 /**
  * Provides some generic test helper methods.
@@ -59,11 +60,24 @@ public class TestUtils {
         return ModuleRootManager.getInstance(module).getContentRoots()[0];
     }
 
+    public static void changeFileContentTo(final File file, final String newContent) throws IOException {
+        FileWriter fw = new FileWriter(file);
+        fw.write(newContent);
+        fw.flush();
+        fw.close();
+    }
+
     // Gitflow helpers ////////////////////////////////////////////////////////
 
     public static void enableGitflow(final GitRepository gitRepository, final GitflowInitOptions gitflowInitOptions) {
         Gitflow gitflow = ServiceManager.getService(Gitflow.class);
         gitflow.initRepo(gitRepository, gitflowInitOptions);
+    }
+
+    public static void startHotfix(final GitRepository gitRepository, final String hotfixName) {
+        Gitflow gitflow = ServiceManager.getService(Gitflow.class);
+        gitflow.startHotfix(gitRepository, hotfixName);
+
     }
 
     // Git command helpers ////////////////////////////////////////////////////
@@ -72,12 +86,13 @@ public class TestUtils {
         return performConsoleGitCommand(repositoryRoot.getCanonicalPath(), "config", "--list");
     }
 
-    public static File addAndCommitTestfile(final VirtualFile repositoryRoot) throws IOException {
-        final File testfileCreated = new File(repositoryRoot.getCanonicalPath(), "ATestFile.txt");
-        assertThat(testfileCreated.createNewFile(), is(true));
+    public static void switchBranch(final GitRepository gitRepository, final String targetBranch) throws IOException {
+        final VirtualFile repositoryRoot = gitRepository.getRoot();
+        switchBranch(repositoryRoot, targetBranch);
+    }
 
-        performConsoleGitCommand(repositoryRoot.getCanonicalPath(), "add", testfileCreated.getCanonicalPath());
-        performConsoleGitCommand(repositoryRoot.getCanonicalPath(), "commit", "-m", "'* addAndCommitTestfile() performed'");
+    public static void switchBranch(final VirtualFile repositoryRoot, final String targetBranch) throws IOException {
+        performConsoleGitCommand(repositoryRoot.getCanonicalPath(), "checkout", targetBranch);
 
         /*
         Wir haben hier an Intellij vorbei ganz simpel einen Git-Befehl als Prozess abgesetzt. Daher kann das virtuelle
@@ -85,21 +100,55 @@ public class TestUtils {
         die Dateisysteme abgleichen.
          */
         syncFileSystem();
+    }
 
+    public static File addAndCommitTestfile(final VirtualFile repositoryRoot) throws IOException {
+        final File testfileCreated = new File(repositoryRoot.getCanonicalPath(), "ATestFile.txt");
+        assertThat(testfileCreated.createNewFile(), is(true));
         testfileCreated.deleteOnExit();
+
+        add(repositoryRoot, testfileCreated);
+        commit(repositoryRoot, "'* addAndCommitTestfile() performed'");
+
         return testfileCreated;
     }
 
+    public static void add(final VirtualFile repositoryRoot, final File fileToAdd) throws IOException {
+        performConsoleGitCommand(repositoryRoot.getCanonicalPath(), "add", fileToAdd.getCanonicalPath());
+        /*
+        Wir haben hier an Intellij vorbei ganz simpel einen Git-Befehl als Prozess abgesetzt. Daher kann das virtuelle
+        Dateisystem von Intellij und das echte Dateisystem nun nicht mehr synchron sein. Für unseren Test müssen wir
+        die Dateisysteme abgleichen.
+         */
+        syncFileSystem();
+    }
+
+    public static void commit(final VirtualFile repositoryRoot, final String oneLineCommitMessage) throws IOException {
+        performConsoleGitCommand(repositoryRoot.getCanonicalPath(), "commit", "-a", "-m", oneLineCommitMessage);
+
+        /*
+        Wir haben hier an Intellij vorbei ganz simpel einen Git-Befehl als Prozess abgesetzt. Daher kann das virtuelle
+        Dateisystem von Intellij und das echte Dateisystem nun nicht mehr synchron sein. Für unseren Test müssen wir
+        die Dateisysteme abgleichen.
+         */
+        syncFileSystem();
+    }
+
     public static void initGitRepo(final Project project, final VirtualFile virtualFile) throws IOException {
-        final String canonicalPath = virtualFile.getCanonicalPath();
-        initGitRepo(canonicalPath);
+        initGitRepo(virtualFile);
 
         ProjectLevelVcsManager projectLevelVcsManager = ProjectLevelVcsManager.getInstance(project);
         projectLevelVcsManager.setDirectoryMapping(virtualFile.getCanonicalPath(), "Git");
     }
 
-    public static void initGitRepo(final String canonicalPath) throws IOException {
+    public static void initGitRepo(final VirtualFile repositoryRoot) throws IOException {
+        final String canonicalPath = repositoryRoot.getCanonicalPath();
+
         performConsoleGitCommand(canonicalPath, "init", canonicalPath);
+        performConsoleGitCommand(canonicalPath, "config", "user.name", "Unit Testcase");
+        performConsoleGitCommand(canonicalPath, "config", "user.email", "unit_testcase@nonexistent.com");
+
+        createAndCommitGitignoreFile(repositoryRoot);
 
         /*
         Wir haben hier an Intellij vorbei ganz simpel einen Git-Befehl als Prozess abgesetzt. Daher kann das virtuelle
@@ -109,12 +158,45 @@ public class TestUtils {
         syncFileSystem();
     }
 
+    public static void createAndCommitGitignoreFile(final VirtualFile repositoryRoot) throws IOException {
+        final String canonicalPath = repositoryRoot.getCanonicalPath();
+
+        final File gitignoreFile = new File(canonicalPath, ".gitignore");
+        final FileWriter gitignoreFileWriter = new FileWriter(gitignoreFile);
+
+        /*
+        Ich muss alles was es findet auf gitignore setzen, da ich keine Möglichkeit gefunden habe die Intellij Projekte
+        in ein anderes Verzeichnis als /tmp zu erstellen. Da git aber dann wegen "Unstaged Changes" meckert ignoriere
+        ich alles.
+         */
+        final Collection<File> filesToIgnore = FileUtils.listFilesAndDirs(new File(canonicalPath), TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
+        for (File fileToIgnore : filesToIgnore) {
+            if (!".gitignore".equals(fileToIgnore.getName())) {
+                gitignoreFileWriter.append(fileToIgnore.getName()).append("\n");
+            }
+        }
+
+        gitignoreFileWriter.flush();
+        gitignoreFileWriter.close();
+
+        add(repositoryRoot, gitignoreFile);
+        commit(repositoryRoot, "* .gitignore added");
+    }
+
     public static String performConsoleGitCommand(final String gitDir, @NotNull final String command, @NotNull String... arguments) throws IOException {
+        /*
+        Wir erzwingen hier die Default-SPrache für Git, da wir für Workarounds die Ausgabe verarbeiten müssen. Je nach
+        Rechner würde Git nativ in einer anderen Sprache antworten. Daher fallen wir auf das Default zurück.
+         */
+        final String[] environment = new String[]{
+                "LC_ALL", "C"
+        };
+
         final List<String> args = new LinkedList<String>();
         args.add("git");
         args.add(command);
         args.addAll(Arrays.asList(arguments));
-        Process p = Runtime.getRuntime().exec(args.toArray(new String[args.size()]), null, new File(gitDir));
+        Process p = Runtime.getRuntime().exec(args.toArray(new String[args.size()]), environment, new File(gitDir));
 
         final StringBuilder stdinValue = new StringBuilder();
         final InputStream stdin = p.getInputStream();
@@ -131,7 +213,19 @@ public class TestUtils {
             stderrValue.append(line).append("\n");
         }
 
-        assertThat(stderrValue.toString(), is(isEmptyString()));
+        /*
+        Workaround: Git schreibt das erfolgreiche Wechseln eines Branches nach stderr. Daher prüfen wir den Fehlerstring
+        und behandeln erfolgreiches Wechseln nicht als Fehler.
+
+        Einzige gefundene Quelle dazu: http://git.661346.n2.nabble.com/Bugreport-Git-responds-with-stderr-instead-of-stdout-td4959280.html
+         */
+        String stderrValueString = stderrValue.toString();
+        if (stderrValueString.startsWith("Switched to branch")) {
+            stdinValue.append(stderrValueString);
+            stderrValueString = "";
+        }
+
+        assertThat(stderrValueString, is(isEmptyString()));
 
         try {
             p.waitFor();

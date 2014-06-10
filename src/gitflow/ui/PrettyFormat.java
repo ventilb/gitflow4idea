@@ -22,6 +22,18 @@ public class PrettyFormat {
         return String.format("%s%s - %s", hotfixPrefix, hotfixName, repositoryName);
     }
 
+    public static String hotfixProductionDevelopmentBranchAndRepositoryName(@NotNull final RepositoryConfig repositoryConfig, @NotNull final String hotfixName) {
+        final GitRepository gitRepository = repositoryConfig.getGitRepository();
+
+        final String productionBranchName = trimStringOrEmptyWhenNull(repositoryConfig.getProductionBranch());
+        final String developmentBranchName = trimStringOrEmptyWhenNull(repositoryConfig.getDevelopmentBranch());
+
+        final String hotfixPrefix = trimStringOrEmptyWhenNull(repositoryConfig.getHotfixPrefix());
+        final String repositoryName = trimStringOrEmptyWhenNull(GitflowGitRepositoryUtil.getHumanReadableRepositoryName(gitRepository));
+
+        return String.format("%s%s - %s (%s, %s)", hotfixPrefix, hotfixName, repositoryName, productionBranchName, developmentBranchName);
+    }
+
     public static String trimStringOrEmptyWhenNull(final String aString) {
         return (aString == null ? "" : aString.trim());
     }

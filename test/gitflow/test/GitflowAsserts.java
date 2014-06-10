@@ -5,7 +5,9 @@ import git4idea.GitLocalBranch;
 import git4idea.branch.GitBranchUtil;
 import git4idea.repo.GitRepository;
 import gitflow.GitflowConfigUtil;
+import org.apache.commons.io.FileUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 
@@ -22,6 +24,17 @@ import static org.hamcrest.Matchers.is;
  */
 public class GitflowAsserts {
 
+    public static void assertFileContentInDefaultGitflowBranches(final GitRepository gitRepository, final File fileToTest, final String expectedFileContent) throws Exception {
+        TestUtils.switchBranch(gitRepository, GitflowConfigUtil.DEFAULT_BRANCH_MASTER);
+        final String actualFileContentInProductionBranch = FileUtils.readFileToString(fileToTest);
+
+        TestUtils.switchBranch(gitRepository, GitflowConfigUtil.DEFAULT_BRANCH_DEVELOP);
+        final String actualFileContentInDevelopBranch = FileUtils.readFileToString(fileToTest);
+
+        assertThat(actualFileContentInProductionBranch, is(expectedFileContent));
+        assertThat(actualFileContentInDevelopBranch, is(expectedFileContent));
+    }
+
     public static void assertDefaultCurrentHotfixBranchName(final GitRepository gitRepository, final String hotfixName) throws Exception {
         final GitLocalBranch currentBranch = gitRepository.getCurrentBranch();
         final String expectedHotfixBranchName = GitflowConfigUtil.DEFAULT_PREFIX_HOTFIX + hotfixName;
@@ -33,6 +46,12 @@ public class GitflowAsserts {
         Collection<String> branches = GitBranchUtil.getBranches(gitRepository.getProject(), gitRepository.getRoot(), true, false, null);
         assertThat(branches, hasSize(3));
         assertThat(branches, containsInAnyOrder(GitflowConfigUtil.DEFAULT_BRANCH_MASTER, GitflowConfigUtil.DEFAULT_BRANCH_DEVELOP, GitflowConfigUtil.DEFAULT_PREFIX_HOTFIX + hotfixName));
+    }
+
+    public static void assertDefaultGitflowBranchNames(final GitRepository gitRepository) throws Exception {
+        Collection<String> branches = GitBranchUtil.getBranches(gitRepository.getProject(), gitRepository.getRoot(), true, false, null);
+        assertThat(branches, hasSize(2));
+        assertThat(branches, containsInAnyOrder(GitflowConfigUtil.DEFAULT_BRANCH_MASTER, GitflowConfigUtil.DEFAULT_BRANCH_DEVELOP));
     }
 
     public static void assertGitflowBranchNames(final GitRepository gitRepository, final String expectedGiflowProductionBranchName, final String expectedGiflowDevelopmentBranchName) throws Exception {

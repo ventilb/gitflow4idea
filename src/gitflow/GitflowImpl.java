@@ -324,6 +324,19 @@ public class GitflowImpl extends GitImpl implements Gitflow {
         return run(h);
     }
 
+    @Override
+    public GitflowGitCommandResult finishHotfix(@NotNull GitflowGitRepository gitflowGitRepository, @NotNull String hotfixName, @NotNull String tagMessage, @Nullable GitLineHandlerListener... listeners) {
+        final GitflowGitCommandResult gitflowGitCommandResult = new GitflowGitCommandResult();
+
+        GitCommandResult gitCommandResult;
+        for (GitRepository gitRepository : gitflowGitRepository.gitRepositories()) {
+            gitCommandResult = finishHotfix(gitRepository, hotfixName, tagMessage, listeners);
+            gitflowGitCommandResult.setGitCommandResultForGitRepository(gitRepository, gitCommandResult);
+        }
+
+        return gitflowGitCommandResult;
+    }
+
     public GitCommandResult finishHotfix(@NotNull GitRepository repository,
                                          @NotNull String hotfixName,
                                          @NotNull String tagMessage,

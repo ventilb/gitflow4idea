@@ -159,8 +159,14 @@ public class GitflowConfigUtil {
         return branchName.substring(branchName.indexOf(releasePrefix) + releasePrefix.length(), branchName.length());
     }
 
+    @Deprecated
     public static String getHotfixNameFromBranch(Project project, String branchName) {
         String hotfixPrefix = GitflowConfigUtil.getHotfixPrefix(project);
+        return branchName.substring(branchName.indexOf(hotfixPrefix) + hotfixPrefix.length(), branchName.length());
+    }
+
+    public static String getHotfixNameFromBranch(final GitRepository gitRepository, final String branchName) {
+        final String hotfixPrefix = GitflowConfigUtil.getHotfixPrefix(gitRepository);
         return branchName.substring(branchName.indexOf(hotfixPrefix) + hotfixPrefix.length(), branchName.length());
     }
 

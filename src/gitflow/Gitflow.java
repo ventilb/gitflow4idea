@@ -72,7 +72,11 @@ public interface Gitflow extends Git {
                                  @NotNull String hotfixName,
                                  @Nullable GitLineHandlerListener... listeners);
 
-    GitCommandResult finishHotfix(@NotNull GitRepository repository,
+    GitCommandResult startHotfix(@NotNull GitRepository repository,
+                                 @NotNull String hotfixName,
+                                 @Nullable GitLineHandlerListener... listeners);
+
+    GitflowGitCommandResult finishHotfix(@NotNull GitflowGitRepository repository,
                                  @NotNull String hotfixName,
                                  @NotNull String tagMessage,
                                  @Nullable GitLineHandlerListener... listeners);
