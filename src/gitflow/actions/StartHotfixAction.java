@@ -25,7 +25,12 @@ public class StartHotfixAction extends GitflowAction {
     public void actionPerformed(AnActionEvent e) {
         super.actionPerformed(e);
 
-        showHotfixNameInputDialog();
+        if (this.gitflowGitRepository.areAllGitRepositoriesOnSameAndValidBranch()) {
+            showHotfixNameInputDialog();
+        } else {
+            // TODO redundant code
+            NotifyUtil.notifyError(this.myProject, "Error", "Your git repositories are on different branches.");
+        }
     }
 
     protected void showHotfixNameInputDialog() {

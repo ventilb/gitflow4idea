@@ -28,6 +28,7 @@ public class FinishHotfixAction extends GitflowAction {
         if (this.gitflowGitRepository.areAllGitRepositoriesOnSameAndValidBranch()) {
             showTagMessageInputDialog();
         } else {
+            // TODO redundant code
             NotifyUtil.notifyError(this.myProject, "Error", "Your git repositories are on different branches.");
         }
     }
