@@ -6,14 +6,13 @@ import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.ui.Messages;
 import git4idea.repo.GitRepository;
 import git4idea.validators.GitNewBranchNameValidator;
+import gitflow.GitflowBranchUtil;
 import gitflow.git.GitflowGitCommandResult;
 import gitflow.git.GitflowPerRepositoryReadConfig;
 import gitflow.git.RepositoryConfig;
 import gitflow.ui.NotifyUtil;
 import gitflow.ui.PrettyFormat;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Collection;
 
 public class StartHotfixAction extends GitflowAction {
 
@@ -34,7 +33,7 @@ public class StartHotfixAction extends GitflowAction {
     }
 
     protected void showHotfixNameInputDialog() {
-        final GitNewBranchNameValidator gitNewBranchNameValidator = createGitNewBranchNameValidator();
+        final GitNewBranchNameValidator gitNewBranchNameValidator = GitflowBranchUtil.createGitNewBranchNameValidator(this.gitflowGitRepository);
 
         final String hotfixName = Messages.showInputDialog(this.myProject, "Enter the name of the new hotfix:", "New Hotfix", Messages.getQuestionIcon(), "", gitNewBranchNameValidator);
 
@@ -66,13 +65,6 @@ public class StartHotfixAction extends GitflowAction {
 
     protected boolean isHotfixNameValid(final String hotfixName) {
         return hotfixName != null && !hotfixName.trim().isEmpty();
-    }
-
-    protected GitNewBranchNameValidator createGitNewBranchNameValidator() {
-        final Collection<GitRepository> gitRepositories = this.gitflowGitRepository.getGitRepositories();
-        final GitNewBranchNameValidator gitNewBranchNameValidator = GitNewBranchNameValidator.newInstance(gitRepositories);
-
-        return gitNewBranchNameValidator;
     }
 
     protected void notifyHotfixWasCreated(final String hotfixName) {

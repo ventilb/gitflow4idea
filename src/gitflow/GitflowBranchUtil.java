@@ -6,6 +6,8 @@ import git4idea.GitRemoteBranch;
 import git4idea.branch.GitBranchUtil;
 import git4idea.repo.GitRemote;
 import git4idea.repo.GitRepository;
+import git4idea.validators.GitNewBranchNameValidator;
+import gitflow.git.GitflowGitRepository;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,6 +47,20 @@ public class GitflowBranchUtil {
 
         this.currentBranchName = GitBranchUtil.getBranchNameOrRev(this.repo);
         branchnameMaster= GitflowConfigUtil.getMasterBranch(this.repo);
+    }
+
+    /**
+     * Factory method to create a {@link git4idea.validators.GitNewBranchNameValidator} for a
+     * {@link gitflow.git.GitflowGitRepository}.
+     *
+     * @param gitflowGitRepository the gitflow git repository
+     * @return git new branch name validator
+     */
+    public static GitNewBranchNameValidator createGitNewBranchNameValidator(GitflowGitRepository gitflowGitRepository) {
+        final Collection<GitRepository> gitRepositories = gitflowGitRepository.getGitRepositories();
+        final GitNewBranchNameValidator gitNewBranchNameValidator = GitNewBranchNameValidator.newInstance(gitRepositories);
+
+        return gitNewBranchNameValidator;
     }
 
     public boolean hasGitflow(){
