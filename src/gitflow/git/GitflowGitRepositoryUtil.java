@@ -34,7 +34,7 @@ public class GitflowGitRepositoryUtil {
         final Project project = projectAndModules.getProject();
         final GitRepositoryManager manager = GitUtil.getRepositoryManager(project);
 
-        final GitflowGitRepository gitflowGitRepository = new GitflowGitRepository();
+        final GitflowGitRepository gitflowGitRepository = new GitflowGitRepository(projectAndModules);
 
         for (VirtualFile virtualFile : projectAndModules.getAllContentRoots()) {
             GitRepository repositoryForRoot = manager.getRepositoryForRoot(virtualFile);

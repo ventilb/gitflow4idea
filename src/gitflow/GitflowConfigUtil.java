@@ -22,6 +22,8 @@ public class GitflowConfigUtil {
 
     public static final String DEFAULT_PREFIX_HOTFIX = "hotfix/";
 
+    public static final String DEFAULT_PREFIX_RELEASE = "release/";
+
     public static final String BRANCH_MASTER = "gitflow.branch.master";
     public static final String BRANCH_DEVELOP = "gitflow.branch.develop";
     public static final String PREFIX_FEATURE = "gitflow.prefix.feature";

@@ -1,8 +1,10 @@
 package gitflow.git;
 
+import com.intellij.openapi.project.Project;
 import git4idea.branch.GitBranchUtil;
 import git4idea.repo.GitRepository;
 import gitflow.GitflowConfigUtil;
+import gitflow.intellij.ProjectAndModules;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -16,9 +18,20 @@ import java.util.*;
  */
 public class GitflowGitRepository {
 
+    private final ProjectAndModules projectAndModules;
+
     private final List<GitRepository> gitRepositories = new LinkedList<GitRepository>();
 
     private GitflowPerRepositoryReadConfig gitflowPerRepositoryReadConfigInstance = null;
+
+    public GitflowGitRepository(@NotNull final ProjectAndModules projectAndModules) {
+        this.projectAndModules = projectAndModules;
+    }
+
+    @NotNull
+    public Project getProject() {
+        return this.projectAndModules.getProject();
+    }
 
     public void addGitRepository(@NotNull final GitRepository gitRepository) {
         if (!this.gitRepositories.contains(gitRepository)) {

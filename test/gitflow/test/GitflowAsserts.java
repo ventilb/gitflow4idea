@@ -42,10 +42,23 @@ public class GitflowAsserts {
         assertThat(currentBranch.getName(), is(expectedHotfixBranchName));
     }
 
+    public static void assertDefaultCurrentReleaseBranchName(final GitRepository gitRepository, final String releaseName) throws Exception {
+        final GitLocalBranch currentBranch = gitRepository.getCurrentBranch();
+        final String expectedHotfixBranchName = GitflowConfigUtil.DEFAULT_PREFIX_RELEASE + releaseName;
+
+        assertThat(currentBranch.getName(), is(expectedHotfixBranchName));
+    }
+
     public static void assertDefaultGitflowBranchNamesAndHotfix(final GitRepository gitRepository, final String hotfixName) throws Exception {
         Collection<String> branches = GitBranchUtil.getBranches(gitRepository.getProject(), gitRepository.getRoot(), true, false, null);
         assertThat(branches, hasSize(3));
         assertThat(branches, containsInAnyOrder(GitflowConfigUtil.DEFAULT_BRANCH_MASTER, GitflowConfigUtil.DEFAULT_BRANCH_DEVELOP, GitflowConfigUtil.DEFAULT_PREFIX_HOTFIX + hotfixName));
+    }
+
+    public static void assertDefaultGitflowBranchNamesAndRelease(final GitRepository gitRepository, final String releaseName) throws Exception {
+        Collection<String> branches = GitBranchUtil.getBranches(gitRepository.getProject(), gitRepository.getRoot(), true, false, null);
+        assertThat(branches, hasSize(3));
+        assertThat(branches, containsInAnyOrder(GitflowConfigUtil.DEFAULT_BRANCH_MASTER, GitflowConfigUtil.DEFAULT_BRANCH_DEVELOP, GitflowConfigUtil.DEFAULT_PREFIX_RELEASE + releaseName));
     }
 
     public static void assertDefaultGitflowBranchNames(final GitRepository gitRepository) throws Exception {

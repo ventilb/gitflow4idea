@@ -29,6 +29,7 @@ public class GitflowBranchUtil {
     String prefixRelease;
     String prefixHotfix;
 
+    @Deprecated
     public GitflowBranchUtil(Project project){
         myProject=project;
         repo = GitBranchUtil.getCurrentRepository(project);
@@ -47,6 +48,7 @@ public class GitflowBranchUtil {
 
         this.currentBranchName = GitBranchUtil.getBranchNameOrRev(this.repo);
         branchnameMaster= GitflowConfigUtil.getMasterBranch(this.repo);
+        // TODO Alles prüfen
     }
 
     /**

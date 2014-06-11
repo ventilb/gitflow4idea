@@ -59,7 +59,7 @@ public class FinishHotfixActionTest extends JavaCodeInsightFixtureTestCase {
         TestUtils.switchBranch(projectGitRepository, GitflowConfigUtil.DEFAULT_BRANCH_DEVELOP);
         TestUtils.switchBranch(module1GitRepository, GitflowConfigUtil.DEFAULT_BRANCH_DEVELOP);
 
-        final GitflowGitRepository gitflowGitRepository = new GitflowGitRepository();
+        final GitflowGitRepository gitflowGitRepository = new GitflowGitRepository(this.testFixture1.projectAndModules);
         gitflowGitRepository.addGitRepository(projectGitRepository);
         gitflowGitRepository.addGitRepository(module1GitRepository);
 

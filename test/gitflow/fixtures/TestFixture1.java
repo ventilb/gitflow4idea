@@ -6,6 +6,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.fixtures.*;
 import git4idea.GitUtil;
 import git4idea.repo.GitRepositoryManager;
+import gitflow.intellij.ProjectAndModules;
 import gitflow.test.TestUtils;
 
 import java.lang.reflect.Field;
@@ -19,6 +20,10 @@ import java.lang.reflect.Field;
  */
 public class TestFixture1 {
 
+    public ProjectAndModules projectAndModules;
+
+    public Project project;
+
     public VirtualFile projectBaseDir;
 
     public Module module1;
@@ -28,8 +33,6 @@ public class TestFixture1 {
     private String name;
 
     public JavaCodeInsightTestFixture myFixture;
-
-    public Project project;
 
     private final JavaCodeInsightFixtureTestCase javaCodeInsightFixtureTestCase;
 
@@ -70,6 +73,8 @@ public class TestFixture1 {
         Field myFixtureField = JavaCodeInsightFixtureTestCase.class.getDeclaredField("myFixture");
         myFixtureField.setAccessible(true);
         myFixtureField.set(this.javaCodeInsightFixtureTestCase, this.myFixture);
+
+        this.projectAndModules = new ProjectAndModules(this.project, new Module[]{this.module1});
     }
 
     public void tearDown() throws Exception {

@@ -34,7 +34,7 @@ public class GitflowGitRepositoryTest extends JavaCodeInsightFixtureTestCase {
         final GitRepository module1GitRepository_2 = manager.getRepositoryForFile(this.testFixture1.module1ContentRoot);
 
         // Test durchführen
-        GitflowGitRepository gitflowGitRepository = new GitflowGitRepository();
+        GitflowGitRepository gitflowGitRepository = new GitflowGitRepository(this.testFixture1.projectAndModules);
         gitflowGitRepository.addGitRepository(projectGitRepository);
         gitflowGitRepository.addGitRepository(module1GitRepository_1);
         try {

@@ -13,16 +13,19 @@ import gitflow.test.GitflowAsserts;
 import gitflow.test.TestUtils;
 import org.junit.Test;
 
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+
 /**
- * Implements a test case to test the {@link gitflow.actions.StartHotfixAction} implementation.
+ * Implements a test case to test the {@link gitflow.actions.StartReleaseAction} implementation.
  *
  * @author <a href="mailto:manuel_schulze@i-entwicklung.de">Manuel Schulze</a>
- * @since 08.06.14 - 14:46
+ * @since 11.06.14 - 01:18
  */
-public class StartHotfixActionTest extends JavaCodeInsightFixtureTestCase {
+public class StartReleaseActionTest extends JavaCodeInsightFixtureTestCase {
 
     @Test
-    public void testPerformStartHotfixCommand() throws Exception {
+    public void testPerformStartReleaseCommand() throws Exception {
         // Testfix erstellen
         final GitRepositoryManager manager = GitUtil.getRepositoryManager(getProject());
 
@@ -40,20 +43,22 @@ public class StartHotfixActionTest extends JavaCodeInsightFixtureTestCase {
         gitflowGitRepository.addGitRepository(module1GitRepository);
 
         // Test durchführen
-        final StartHotfixAction startHotfixAction = new StartHotfixAction();
+        final StartReleaseAction startHotfixAction = new StartReleaseAction();
         startHotfixAction.setProject(this.testFixture1.project);
         startHotfixAction.setVirtualFileMananger(VirtualFileManager.getInstance());
         startHotfixAction.setBranchUtil(new GitflowBranchUtil(this.testFixture1.project));
         startHotfixAction.setGitflowGitRepository(gitflowGitRepository);
 
-        startHotfixAction.performStartHotfixCommand("StartHotfixActionTest");
+        final boolean performStartReleaseCommandWasSuccessfull = startHotfixAction.performStartReleaseCommand("StartReleaseActionTest");
 
         // Test auswerten
-        GitflowAsserts.assertDefaultGitflowBranchNamesAndHotfix(projectGitRepository, "StartHotfixActionTest");
-        GitflowAsserts.assertDefaultGitflowBranchNamesAndHotfix(module1GitRepository, "StartHotfixActionTest");
+        assertThat(performStartReleaseCommandWasSuccessfull, is(true));
 
-        GitflowAsserts.assertDefaultCurrentHotfixBranchName(projectGitRepository, "StartHotfixActionTest");
-        GitflowAsserts.assertDefaultCurrentHotfixBranchName(module1GitRepository, "StartHotfixActionTest");
+        GitflowAsserts.assertDefaultGitflowBranchNamesAndRelease(projectGitRepository, "StartReleaseActionTest");
+        GitflowAsserts.assertDefaultGitflowBranchNamesAndRelease(module1GitRepository, "StartReleaseActionTest");
+
+        GitflowAsserts.assertDefaultCurrentReleaseBranchName(projectGitRepository, "StartReleaseActionTest");
+        GitflowAsserts.assertDefaultCurrentReleaseBranchName(module1GitRepository, "StartReleaseActionTest");
     }
 
     private TestFixture1 testFixture1;
@@ -73,5 +78,4 @@ public class StartHotfixActionTest extends JavaCodeInsightFixtureTestCase {
     public void tearDown() throws Exception {
         this.testFixture1.tearDown();
     }
-
 }

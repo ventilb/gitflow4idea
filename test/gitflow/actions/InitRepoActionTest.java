@@ -31,7 +31,7 @@ public class InitRepoActionTest extends JavaCodeInsightFixtureTestCase {
         final GitRepository projectGitRepository = manager.getRepositoryForRoot(this.testFixture1.projectBaseDir);
         final GitRepository module1GitRepository = manager.getRepositoryForRoot(this.testFixture1.module1ContentRoot);
 
-        final GitflowGitRepository gitflowGitRepository = new GitflowGitRepository();
+        final GitflowGitRepository gitflowGitRepository = new GitflowGitRepository(this.testFixture1.projectAndModules);
         gitflowGitRepository.addGitRepository(projectGitRepository);
         gitflowGitRepository.addGitRepository(module1GitRepository);
 
