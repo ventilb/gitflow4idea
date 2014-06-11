@@ -177,10 +177,10 @@ public class GitflowConfigUtil {
     }
 
     /**
-     * Sets the gitflow master branch name. The configured master branch is used to hold the releases of a gitflow
+     * Sets the gitflow production branch name. The configured master branch is used to hold the releases of a gitflow
      * enabled project.
      *
-     * @param repo       The git repository to set the master branch
+     * @param repo       The git repository to set the production branch
      * @param branchName The branch name to set
      */
     public static void setMasterBranch(final GitRepository repo, final String branchName) {

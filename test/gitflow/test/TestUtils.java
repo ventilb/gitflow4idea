@@ -23,10 +23,7 @@ import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -41,6 +38,11 @@ import static org.junit.Assert.fail;
  */
 public class TestUtils {
     private static final Logger log = Logger.getInstance(TestUtils.class);
+
+    /**
+     * Contains a map of files which were created during a test grouped by git repository root.
+     */
+    private static final Hashtable<VirtualFile, List<File>> testFilesCreatedPerRepositoryRoot = new Hashtable<VirtualFile, List<File>>();
 
     public static ModuleFixture newProjectModuleFixture(final JavaCodeInsightTestFixture testFixture, final TestFixtureBuilder<IdeaProjectTestFixture> ideaProjectBuilder, final String moduleName) throws IOException {
         final JavaModuleFixtureBuilder moduleFixtureBuilder = ideaProjectBuilder.addModule(JavaModuleFixtureBuilder.class);
@@ -67,6 +69,33 @@ public class TestUtils {
         fw.close();
     }
 
+    public static void registerFileCreatedInTest(final VirtualFile repositoryRoot, final File fileCreated) {
+        final List<File> filesCreated;
+        if (testFilesCreatedPerRepositoryRoot.containsKey(repositoryRoot)) {
+            filesCreated = testFilesCreatedPerRepositoryRoot.get(repositoryRoot);
+        } else {
+            filesCreated = new LinkedList<File>();
+            testFilesCreatedPerRepositoryRoot.put(repositoryRoot, filesCreated);
+        }
+
+        filesCreated.add(fileCreated);
+    }
+
+    public static void deleteFilesCreatedInTest(final VirtualFile repositoryRoot) throws IOException {
+        if (testFilesCreatedPerRepositoryRoot.containsKey(repositoryRoot)) {
+            final List<File> filesCreatedInTest = testFilesCreatedPerRepositoryRoot.get(repositoryRoot);
+
+            for (File file : filesCreatedInTest) {
+                if (file.exists()) {
+                    FileUtils.forceDelete(file);
+                }
+            }
+
+            filesCreatedInTest.clear();
+            testFilesCreatedPerRepositoryRoot.remove(repositoryRoot);
+        }
+    }
+
     // Gitflow helpers ////////////////////////////////////////////////////////
 
     public static void enableGitflow(final GitRepository gitRepository, final GitflowInitOptions gitflowInitOptions) {
@@ -77,7 +106,6 @@ public class TestUtils {
     public static void startHotfix(final GitRepository gitRepository, final String hotfixName) {
         Gitflow gitflow = ServiceManager.getService(Gitflow.class);
         gitflow.startHotfix(gitRepository, hotfixName);
-
     }
 
     // Git command helpers ////////////////////////////////////////////////////
@@ -102,6 +130,11 @@ public class TestUtils {
         syncFileSystem();
     }
 
+    public static void createBranch(final GitRepository gitRepository, final String branchName) throws IOException {
+        final VirtualFile repositoryRoot = gitRepository.getRoot();
+        performConsoleGitCommand(repositoryRoot.getCanonicalPath(), "branch", branchName);
+    }
+
     public static File addAndCommitTestfile(final VirtualFile repositoryRoot) throws IOException {
         final File testfileCreated = new File(repositoryRoot.getCanonicalPath(), "ATestFile.txt");
         assertThat(testfileCreated.createNewFile(), is(true));
@@ -109,6 +142,8 @@ public class TestUtils {
 
         add(repositoryRoot, testfileCreated);
         commit(repositoryRoot, "'* addAndCommitTestfile() performed'");
+
+        registerFileCreatedInTest(repositoryRoot, testfileCreated);
 
         return testfileCreated;
     }
@@ -181,6 +216,8 @@ public class TestUtils {
 
         add(repositoryRoot, gitignoreFile);
         commit(repositoryRoot, "* .gitignore added");
+
+        registerFileCreatedInTest(repositoryRoot, gitignoreFile);
     }
 
     public static String performConsoleGitCommand(final String gitDir, @NotNull final String command, @NotNull String... arguments) throws IOException {
@@ -236,15 +273,19 @@ public class TestUtils {
         return stdinValue.toString();
     }
 
-    public static void deleteProjectGitDir(final VirtualFile projectBaseDir) throws IOException {
-        final File projectGitDir = new File(projectBaseDir.getCanonicalPath(), GitUtil.DOT_GIT);
+    public static void deleteProjectGitDir(final VirtualFile repositoryRoot) throws IOException {
+        deleteFilesCreatedInTest(repositoryRoot);
+
+        final File projectGitDir = new File(repositoryRoot.getCanonicalPath(), GitUtil.DOT_GIT);
         if (projectGitDir.exists()) {
             FileUtils.forceDelete(projectGitDir);
         }
     }
 
-    public static void deleteModuleDir(final VirtualFile moduleContentRoot) throws IOException {
-        final File projectGitDir = new File(moduleContentRoot.getCanonicalPath());
+    public static void deleteModuleDir(final VirtualFile repositoryRoot) throws IOException {
+        deleteFilesCreatedInTest(repositoryRoot);
+
+        final File projectGitDir = new File(repositoryRoot.getCanonicalPath());
         if (projectGitDir.exists()) {
             FileUtils.forceDelete(projectGitDir);
         }

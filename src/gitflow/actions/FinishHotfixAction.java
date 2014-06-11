@@ -4,13 +4,10 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.ui.Messages;
-import git4idea.repo.GitRepository;
 import gitflow.GitflowConfigurable;
 import gitflow.git.GitflowGitCommandResult;
-import gitflow.git.GitflowPerRepositoryReadConfig;
-import gitflow.git.RepositoryConfig;
 import gitflow.ui.NotifyUtil;
-import gitflow.ui.PrettyFormat;
+import gitflow.ui.WorkflowUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
@@ -25,11 +22,8 @@ public class FinishHotfixAction extends GitflowAction {
     public void actionPerformed(AnActionEvent e) {
         super.actionPerformed(e);
 
-        if (this.gitflowGitRepository.areAllGitRepositoriesOnSameAndValidBranch()) {
+        if (WorkflowUtil.areAllGitRepositoriesOnSameAndValidBranchOrNotify(this.gitflowGitRepository)) {
             showTagMessageInputDialog();
-        } else {
-            // TODO redundant code
-            NotifyUtil.notifyError(this.myProject, "Error", "Your git repositories are on different branches.");
         }
     }
 
@@ -65,48 +59,14 @@ public class FinishHotfixAction extends GitflowAction {
         final boolean finishHotfixCommandWasSuccessful = result.success();
 
         if (finishHotfixCommandWasSuccessful) {
-            notifyHotfixWasFinished(hotfixName);
+            NotifyUtil.notifyGitflowWorkflowCommandSuccess(this.gitflowGitRepository, "The hotfix '%s' was merged into the following git repositories:", hotfixName);
         } else {
-            notifyHotfixFinishingFailed(hotfixName, result);
+            NotifyUtil.notifyGitflowWorkflowCommandFailed(this.gitflowGitRepository, "Finishing the hotfix '%s' resulted in an error in the following git repositories:", hotfixName, result);
         }
 
         this.gitflowGitRepository.update();
 
         return finishHotfixCommandWasSuccessful;
-    }
-
-    protected void notifyHotfixWasFinished(final String hotfixName) {
-        final GitflowPerRepositoryReadConfig gitflowPerRepositoryReadConfig = this.gitflowGitRepository.getGitflowPerRepositoryReadConfig();
-
-        final StringBuilder startedHotfixMessage = new StringBuilder("The hotfix '")
-                .append(hotfixName)
-                .append("' was merged into the following git repositories:<ul>");
-        for (RepositoryConfig repositoryConfig : gitflowPerRepositoryReadConfig.repositoryConfigs()) {
-            startedHotfixMessage.append("<li>")
-                    .append(PrettyFormat.hotfixProductionDevelopmentBranchAndRepositoryName(repositoryConfig, hotfixName))
-                    .append("</li>");
-        }
-        startedHotfixMessage.append("</ul>");
-
-        NotifyUtil.notifySuccess(this.myProject, hotfixName, startedHotfixMessage.toString());
-    }
-
-    protected void notifyHotfixFinishingFailed(final String hotfixName, final GitflowGitCommandResult result) {
-        final GitflowPerRepositoryReadConfig gitflowPerRepositoryReadConfig = this.gitflowGitRepository.getGitflowPerRepositoryReadConfig();
-
-        final GitRepository[] failedGitRepositories = result.getFailedGitRepositories();
-
-        final StringBuilder startedHotfixErrorMessage = new StringBuilder("Finishing the hotfix '")
-                .append(hotfixName)
-                .append("' resulted in an error in the following git repositories:<ul>");
-        for (RepositoryConfig repositoryConfig : gitflowPerRepositoryReadConfig.repositoryConfigs(failedGitRepositories)) {
-            startedHotfixErrorMessage.append("<li>")
-                    .append(PrettyFormat.hotfixProductionDevelopmentBranchAndRepositoryName(repositoryConfig, hotfixName))
-                    .append("</li>");
-        }
-        startedHotfixErrorMessage.append("</ul>Please also have a look at the Version Control console for more details.");
-
-        NotifyUtil.notifyError(this.myProject, "Error", startedHotfixErrorMessage.toString());
     }
 
 }

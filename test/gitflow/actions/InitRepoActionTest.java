@@ -11,6 +11,7 @@ import gitflow.GitflowInitOptions;
 import gitflow.fixtures.TestFixture1;
 import gitflow.git.GitflowGitRepository;
 import gitflow.test.GitflowAsserts;
+import gitflow.test.TestUtils;
 
 import java.util.Collection;
 
@@ -35,6 +36,18 @@ public class InitRepoActionTest extends JavaCodeInsightFixtureTestCase {
         gitflowGitRepository.addGitRepository(projectGitRepository);
         gitflowGitRepository.addGitRepository(module1GitRepository);
 
+        /*
+        Die letzte Github Version von gitflow erstellt den production-Branch nicht mehr automatisch sodass gitflow
+        fehlerhaft initialisiert wird. Das gitflow4idea Plugin ruft den Befehl git flow init -d auf wodurch sich gitflow
+        mit Default Einstellungen initialisiert. In der Fedora 20 Repository Version von gitflow wurde der production
+        Branch noch automatisch erstellt. In der aktuellen Github Version von gitflow ist das nicht mehr der Fall.
+
+        Das scheint aber nur dann der Fall zu sein, wenn man nicht die Default Einstellungen verwendet, wie in diesem
+        Test.
+         */
+        TestUtils.createBranch(projectGitRepository, "production");
+        TestUtils.createBranch(module1GitRepository, "production");
+
         final GitflowInitOptions gitflowInitOptions = new GitflowInitOptions();
         gitflowInitOptions.setDevelopmentBranch("master");
         gitflowInitOptions.setProductionBranch("production");
@@ -52,9 +65,11 @@ public class InitRepoActionTest extends JavaCodeInsightFixtureTestCase {
         initRepoAction.setBranchUtil(new GitflowBranchUtil(this.testFixture1.project));
         initRepoAction.setGitflowGitRepository(gitflowGitRepository);
 
-        initRepoAction.performInitReposCommand(gitflowGitRepository, gitflowInitOptions);
+        final boolean initRepoWasSuccessful = initRepoAction.performInitReposCommand(gitflowInitOptions);
 
         // Test auswerten
+        assertThat(initRepoWasSuccessful, is(true));
+
         GitflowAsserts.assertGitflowBranchNames(projectGitRepository, "production", "master");
         GitflowAsserts.assertGitflowPrefixes(projectGitRepository, "feature-", "hotfix-", "release-", "support-");
 
@@ -68,7 +83,6 @@ public class InitRepoActionTest extends JavaCodeInsightFixtureTestCase {
         Collection<String> module1Branches = GitBranchUtil.getBranches(this.testFixture1.project, this.testFixture1.module1ContentRoot, true, false, null);
         assertThat(module1Branches, hasSize(2));
         assertThat(module1Branches, containsInAnyOrder("master", "production"));
-
     }
 
     private TestFixture1 testFixture1;

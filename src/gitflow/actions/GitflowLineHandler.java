@@ -9,8 +9,8 @@ import java.util.ArrayList;
 
 //generic line handler (should handle errors etc)
 public abstract class GitflowLineHandler implements GitLineHandlerListener {
-    ArrayList<String> myErrors=new ArrayList<String>();
-    Project myProject;
+    protected ArrayList<String> myErrors=new ArrayList<String>();
+    protected Project myProject;
 
     @Override
     public void onLineAvailable(String line, Key outputType) {

@@ -13,6 +13,14 @@ import org.jetbrains.annotations.NotNull;
  */
 public class PrettyFormat {
 
+    public static String repositoryName(@NotNull RepositoryConfig  repositoryConfig) {
+        final GitRepository gitRepository = repositoryConfig.getGitRepository();
+
+        final String repositoryName = trimStringOrEmptyWhenNull(GitflowGitRepositoryUtil.getHumanReadableRepositoryName(gitRepository));
+
+        return repositoryName;
+    }
+
     public static String hotfixBranchAndRepositoryName(@NotNull final RepositoryConfig repositoryConfig, @NotNull final String hotfixName) {
         final GitRepository gitRepository = repositoryConfig.getGitRepository();
 

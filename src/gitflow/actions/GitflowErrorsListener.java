@@ -8,7 +8,7 @@ public class GitflowErrorsListener extends GitflowLineHandler{
 
     boolean hasMergeError=false;
 
-    GitflowErrorsListener(Project project){
+    public GitflowErrorsListener(Project project){
         myProject=project;
     }
 
