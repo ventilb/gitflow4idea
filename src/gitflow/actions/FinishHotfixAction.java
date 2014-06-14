@@ -28,27 +28,22 @@ public class FinishHotfixAction extends GitflowAction {
     }
 
     protected void showTagMessageInputDialog() {
-        final Set<String> uniqueHotfixNames = this.gitflowGitRepository.getUniqueHotfixNamesFromCurrentBranches();
+        final String hotfixName = WorkflowUtil.getUniqueHotfixNameOrNotify(this.gitflowGitRepository);
 
-        if (uniqueHotfixNames.size() != 1) {
-            NotifyUtil.notifyError(this.myProject, "Error", "The tracked git repositories have different hotfixes.");
-            return;
-        }
+        if (hotfixName != null) {
+            String defaultTagMessage = GitflowConfigurable.getCustomHotfixTagCommitMessage(this.myProject);
+            defaultTagMessage = defaultTagMessage.replace("%name%", hotfixName);
 
-        final String hotfixName = uniqueHotfixNames.iterator().next();
+            final String tagMessage = Messages.showInputDialog(this.myProject, "Enter the tag message:", "Finish Hotfix", Messages.getQuestionIcon(), defaultTagMessage, null);
 
-        String defaultTagMessage = GitflowConfigurable.getCustomHotfixTagCommitMessage(this.myProject);
-        defaultTagMessage = defaultTagMessage.replace("%name%", hotfixName);
+            if (tagMessage != null) {
+                new Task.Backgroundable(this.myProject, "Finishing hotfix " + hotfixName, false) {
 
-        final String tagMessage = Messages.showInputDialog(this.myProject, "Enter the tag message:", "Finish Hotfix", Messages.getQuestionIcon(), defaultTagMessage, null);
-
-        if (tagMessage != null) {
-            new Task.Backgroundable(this.myProject, "Finishing hotfix " + hotfixName, false) {
-
-                public void run(@NotNull ProgressIndicator indicator) {
-                    performFinishHotfixCommand(hotfixName, tagMessage);
-                }
-            }.queue();
+                    public void run(@NotNull ProgressIndicator indicator) {
+                        performFinishHotfixCommand(hotfixName, tagMessage);
+                    }
+                }.queue();
+            }
         }
     }
 

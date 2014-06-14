@@ -92,6 +92,33 @@ public class GitflowGitRepository {
         return distinctHotfixNames;
     }
 
+    /**
+     * Returns all unique release names from all repositories.
+     * <p>
+     * Normally this method returns a set with only one element. It should not happen that the managed git repositories
+     * work on different releases.
+     * </p>
+     * <p>
+     * The behaviour is unspecified if any of the repositories is not on a release branch.
+     * </p>
+     *
+     * @return all unique release names
+     */
+    public Set<String> getUniqueReleaseNamesFromCurrentBranches() {
+        final Set<String> distinctReleaseNames = new HashSet<String>();
+
+        String releaseName;
+        String currentBranchName;
+        for (GitRepository gitRepository : gitRepositories()) {
+            currentBranchName = GitBranchUtil.getBranchNameOrRev(gitRepository);
+            releaseName = GitflowConfigUtil.getReleaseNameFromBranch(gitRepository, currentBranchName);
+
+            distinctReleaseNames.add(releaseName);
+        }
+
+        return distinctReleaseNames;
+    }
+
     public GitflowPerRepositoryReadConfig getGitflowPerRepositoryReadConfig() {
         if (this.gitflowPerRepositoryReadConfigInstance == null) {
             this.gitflowPerRepositoryReadConfigInstance = new GitflowPerRepositoryReadConfig(this);
