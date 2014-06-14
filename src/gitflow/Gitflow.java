@@ -46,7 +46,7 @@ public interface Gitflow extends Git {
                                   @NotNull GitRemote remote,
                                   @Nullable GitLineHandlerListener... listeners);
 
-    //release
+    // release
 
     GitflowGitCommandResult startRelease(@NotNull GitflowGitRepository repository,
                                          @NotNull String releaseName,
@@ -56,6 +56,11 @@ public interface Gitflow extends Git {
                                   @NotNull String releaseName,
                                   @Nullable GitLineHandlerListener... listeners);
 
+
+    GitflowGitCommandResult finishRelease(@NotNull GitflowGitRepository repository,
+                                   @NotNull String releaseName,
+                                   @NotNull String tagMessage,
+                                   @Nullable GitLineHandlerListener... listeners);
 
     GitCommandResult finishRelease(@NotNull GitRepository repository,
                                    @NotNull String releaseName,
@@ -71,7 +76,7 @@ public interface Gitflow extends Git {
                                   @NotNull String releaseName,
                                   @Nullable GitLineHandlerListener... listeners);
 
-    //hotfix
+    // hotfix
 
     GitflowGitCommandResult startHotfix(@NotNull GitflowGitRepository repository,
                                         @NotNull String hotfixName,
@@ -90,4 +95,7 @@ public interface Gitflow extends Git {
                                    @NotNull String hotfixName,
                                    @Nullable GitLineHandlerListener... listeners);
 
+    // Merge
+
+    public boolean mergeBranches(@NotNull GitflowGitRepository repository);
 }

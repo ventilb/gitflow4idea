@@ -47,9 +47,9 @@ public class StartHotfixAction extends GitflowAction {
         final GitflowGitCommandResult result = this.myGitflow.startHotfix(this.gitflowGitRepository, hotfixName, errorLineHandler);
 
         if (result.success()) {
-            NotifyUtil.notifyGitflowWorkflowCommandSuccess(this.gitflowGitRepository, "A new hotfix '%s' was created in the following git repositories:", hotfixName);
+            NotifyUtil.notifyGitflowHotfixCommandSuccess(this.gitflowGitRepository, "A new hotfix '%s' was created in the following git repositories:", hotfixName);
         } else {
-            NotifyUtil.notifyGitflowWorkflowCommandFailed(this.gitflowGitRepository, "Starting a new hotfix '%s' resulted in an error in the following git repositories:", hotfixName, result);
+            NotifyUtil.notifyGitflowHotfixCommandFailed(this.gitflowGitRepository, "Starting a new hotfix '%s' resulted in an error in the following git repositories:", hotfixName, result);
         }
 
         this.gitflowGitRepository.update();

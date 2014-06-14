@@ -39,7 +39,7 @@ public class NotifyUtil {
     private static void notify(NotificationType type, NotificationGroup group, Project project, String title, String message) {
         group.createNotification(title, message, type, null).notify(project);
     }
-
+// TODO Zuviel redundanz. Das Builder Pattern um die Messages zu erstellen scheint mir hier angebracht
     /**
      * Notifies the user that a gitflow workflow was successful. The {@code messageIntro} parameter should state which
      * gitflow command was successful.
@@ -100,7 +100,7 @@ public class NotifyUtil {
      * @param messageIntro           the message intro
      * @param workflowUserInputValue the workflow user input name
      */
-    public static void notifyGitflowWorkflowCommandSuccess(@NotNull final GitflowGitRepository gitflowGitRepository, @NotNull final String messageIntro, @NotNull final String workflowUserInputValue) {
+    public static void notifyGitflowHotfixCommandSuccess(@NotNull final GitflowGitRepository gitflowGitRepository, @NotNull final String messageIntro, @NotNull final String workflowUserInputValue) {
         final Project project = gitflowGitRepository.getProject();
         final GitflowPerRepositoryReadConfig gitflowPerRepositoryReadConfig = gitflowGitRepository.getGitflowPerRepositoryReadConfig();
 
@@ -118,6 +118,32 @@ public class NotifyUtil {
     }
 
     /**
+     * Notifies the user that a gitflow workflow was successful. The {@code messageIntro} parameter should state which
+     * gitflow command was successful. The string must contain a replacement parameter %s which will be replaced by
+     * the {@code workflowUserInputValue} value such as a branch name.
+     *
+     * @param gitflowGitRepository   the gitflow git repository
+     * @param messageIntro           the message intro
+     * @param workflowUserInputValue the workflow user input name
+     */
+    public static void notifyGitflowReleaseCommandSuccess(@NotNull final GitflowGitRepository gitflowGitRepository, @NotNull final String messageIntro, @NotNull final String workflowUserInputValue) {
+        final Project project = gitflowGitRepository.getProject();
+        final GitflowPerRepositoryReadConfig gitflowPerRepositoryReadConfig = gitflowGitRepository.getGitflowPerRepositoryReadConfig();
+
+        final StringBuilder workflowStartedMessage = new StringBuilder(String.format(messageIntro, workflowUserInputValue));
+
+        workflowStartedMessage.append("<ul>");
+        for (RepositoryConfig repositoryConfig : gitflowPerRepositoryReadConfig.repositoryConfigs()) {
+            workflowStartedMessage.append("<li>")
+                    .append(PrettyFormat.releaseBranchAndRepositoryName(repositoryConfig, workflowUserInputValue))
+                    .append("</li>");
+        }
+        workflowStartedMessage.append("</ul>");
+
+        NotifyUtil.notifySuccess(project, workflowUserInputValue, workflowStartedMessage.toString());
+    }
+
+    /**
      * Notifies the user that a gitflow workflow has failed. The {@code messageIntro} parameter should state which
      * gitflow command failed. The string must contain a replacement parameter %s which will be replaced by
      * the {@code workflowUserInputValue} value such as a branch name.
@@ -127,7 +153,7 @@ public class NotifyUtil {
      * @param workflowUserInputValue the workflow user input name
      * @param result                 the gitflow command result object
      */
-    public static void notifyGitflowWorkflowCommandFailed(@NotNull final GitflowGitRepository gitflowGitRepository, @NotNull final String messageIntro, @NotNull final String workflowUserInputValue, @NotNull final GitflowGitCommandResult result) {
+    public static void notifyGitflowHotfixCommandFailed(@NotNull final GitflowGitRepository gitflowGitRepository, @NotNull final String messageIntro, @NotNull final String workflowUserInputValue, @NotNull final GitflowGitCommandResult result) {
         final Project project = gitflowGitRepository.getProject();
         final GitflowPerRepositoryReadConfig gitflowPerRepositoryReadConfig = gitflowGitRepository.getGitflowPerRepositoryReadConfig();
 
@@ -139,6 +165,35 @@ public class NotifyUtil {
         for (RepositoryConfig repositoryConfig : gitflowPerRepositoryReadConfig.repositoryConfigs(failedGitRepositories)) {
             workflowFailedMessage.append("<li>")
                     .append(PrettyFormat.hotfixBranchAndRepositoryName(repositoryConfig, workflowUserInputValue))
+                    .append("</li>");
+        }
+        workflowFailedMessage.append("</ul>Please also have a look at the Version Control console for more details.");
+
+        NotifyUtil.notifyError(project, "Error", workflowFailedMessage.toString());
+    }
+
+    /**
+     * Notifies the user that a gitflow workflow has failed. The {@code messageIntro} parameter should state which
+     * gitflow command failed. The string must contain a replacement parameter %s which will be replaced by
+     * the {@code workflowUserInputValue} value such as a branch name.
+     *
+     * @param gitflowGitRepository   the gitflow git repository
+     * @param messageIntro           the message intro
+     * @param workflowUserInputValue the workflow user input name
+     * @param result                 the gitflow command result object
+     */
+    public static void notifyGitflowReleaseCommandFailed(@NotNull final GitflowGitRepository gitflowGitRepository, @NotNull final String messageIntro, @NotNull final String workflowUserInputValue, @NotNull final GitflowGitCommandResult result) {
+        final Project project = gitflowGitRepository.getProject();
+        final GitflowPerRepositoryReadConfig gitflowPerRepositoryReadConfig = gitflowGitRepository.getGitflowPerRepositoryReadConfig();
+
+        final GitRepository[] failedGitRepositories = result.getFailedGitRepositories();
+
+        final StringBuilder workflowFailedMessage = new StringBuilder(String.format(messageIntro, workflowUserInputValue));
+
+        workflowFailedMessage.append("<ul>");
+        for (RepositoryConfig repositoryConfig : gitflowPerRepositoryReadConfig.repositoryConfigs(failedGitRepositories)) {
+            workflowFailedMessage.append("<li>")
+                    .append(PrettyFormat.releaseBranchAndRepositoryName(repositoryConfig, workflowUserInputValue))
                     .append("</li>");
         }
         workflowFailedMessage.append("</ul>Please also have a look at the Version Control console for more details.");

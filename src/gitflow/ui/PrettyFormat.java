@@ -30,6 +30,15 @@ public class PrettyFormat {
         return String.format("%s%s - %s", hotfixPrefix, hotfixName, repositoryName);
     }
 
+    public static String releaseBranchAndRepositoryName(@NotNull final RepositoryConfig repositoryConfig, @NotNull final String releaseName) {
+        final GitRepository gitRepository = repositoryConfig.getGitRepository();
+
+        final String releasePrefix = trimStringOrEmptyWhenNull(repositoryConfig.getReleasePrefix());
+        final String repositoryName = trimStringOrEmptyWhenNull(GitflowGitRepositoryUtil.getHumanReadableRepositoryName(gitRepository));
+
+        return String.format("%s%s - %s", releasePrefix, releaseName, repositoryName);
+    }
+
     public static String hotfixProductionDevelopmentBranchAndRepositoryName(@NotNull final RepositoryConfig repositoryConfig, @NotNull final String hotfixName) {
         final GitRepository gitRepository = repositoryConfig.getGitRepository();
 

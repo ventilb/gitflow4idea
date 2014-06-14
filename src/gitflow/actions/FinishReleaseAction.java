@@ -3,11 +3,8 @@ package gitflow.actions;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
-import com.intellij.openapi.ui.Messages;
-import git4idea.branch.GitBranchUtil;
-import git4idea.commands.GitCommandResult;
-import gitflow.GitflowConfigUtil;
-import gitflow.GitflowConfigurable;
+import gitflow.git.GitflowGitCommandResult;
+import gitflow.models.FinishReleaseResultCode;
 import gitflow.models.ReleaseTagMessageOrCancelModel;
 import gitflow.ui.NotifyUtil;
 import gitflow.ui.WorkflowUtil;
@@ -15,17 +12,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class FinishReleaseAction extends GitflowAction {
 
-    String customReleaseName = null;
-    String customtagMessage = null;
-
     FinishReleaseAction() {
         super("Finish Release");
-    }
-
-    FinishReleaseAction(String name, String tagMessage) {
-        super("Finish Release");
-        customReleaseName = name;
-        customtagMessage = tagMessage;
     }
 
     @Override
@@ -38,59 +26,64 @@ public class FinishReleaseAction extends GitflowAction {
     }
 
     protected void showTagMessageInputDialog() {
-        final AnActionEvent event = null;//e;
+        final String releaseName = WorkflowUtil.getUniqueReleaseNameOrNotify(this.gitflowGitRepository);
 
-        final String releaseName = getReleaseName();
-
-        final ReleaseTagMessageOrCancelModel tagMessageModel = WorkflowUtil.getReleaseTagMessage(this.myProject, releaseName, customtagMessage);
+        final ReleaseTagMessageOrCancelModel tagMessageModel = WorkflowUtil.getReleaseTagMessage(this.myProject, releaseName, null);
 
         final String tagMessage = tagMessageModel.getTagMessage();
         final boolean cancelAction = tagMessageModel.isCancel();
 
         if (!cancelAction) {
-
-            new Task.Backgroundable(myProject, "Finishing release " + releaseName, false) {
-                @Override
-                public void run(@NotNull ProgressIndicator indicator) {
-                    final GitflowErrorsListener errorLineHandler = new GitflowErrorsListener(myProject);
-
-                    GitCommandResult result = myGitflow.finishRelease(repo, releaseName, tagMessage, errorLineHandler);
-
-                    if (result.success()) {
-                        String finishedReleaseMessage = String.format("The release branch '%s%s' was merged into '%s' and '%s'", featurePrefix, releaseName, developBranch, masterBranch);
-                        NotifyUtil.notifySuccess(myProject, releaseName, finishedReleaseMessage);
-                    } else if (errorLineHandler.hasMergeError) {
-                        // (merge errors are handled in the onSuccess handler)
-                    } else {
-                        NotifyUtil.notifyError(myProject, "Error", "Please have a look at the Version Control console for more details");
-                    }
-
-
-                }
-
-                @Override
-                public void onSuccess() {
-                    super.onSuccess();
-
-                    //merge conflicts if necessary
-//                    if (errorLineHandler.hasMergeError) {
-//                        if (handleMerge()) {
-//                            FinishReleaseAction completeFinisReleaseAction = new FinishReleaseAction(releaseName, tagMessage);
-//                            completeFinisReleaseAction.actionPerformed(event);
-//                        }
-//                    }
-                }
-
-            }.queue();
-
+            performFinishReleaseCommandInBackground(releaseName, tagMessage);
         }
     }
 
-    protected String getReleaseName() {
-        final String releaseName = WorkflowUtil.getUniqueReleaseNameOrNotify(this.gitflowGitRepository);
+    protected void performFinishReleaseCommandInBackground(final String releaseName, final String tagMessage) {
+        new Task.Backgroundable(this.myProject, "Finishing release " + releaseName, false) {
 
-         // Check if a release name was specified, otherwise take name from current branch
-        return this.customReleaseName != null ? this.customReleaseName : releaseName;
+            private FinishReleaseResultCode finishReleaseResultCode;
+
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                this.finishReleaseResultCode = performFinishReleaseCommand(releaseName, tagMessage);
+            }
+
+            @Override
+            public void onSuccess() {
+                super.onSuccess();
+                // merge conflicts if necessary
+                mergesBranchesIfMergeConflictOccured(this.finishReleaseResultCode, releaseName, tagMessage);
+            }
+
+        }.queue();
+    }
+
+    protected FinishReleaseResultCode performFinishReleaseCommand(final String releaseName, final String tagMessage) {
+        final GitflowErrorsListener errorLineHandler = new GitflowErrorsListener(this.myProject);
+
+        final GitflowGitCommandResult result = this.myGitflow.finishRelease(this.gitflowGitRepository, releaseName, tagMessage, errorLineHandler);
+
+        if (result.success()) {
+            NotifyUtil.notifyGitflowReleaseCommandSuccess(this.gitflowGitRepository, "The release '%s' was merged into the following git repositories:", releaseName);
+            return FinishReleaseResultCode.SUCCESS;
+        } else if (errorLineHandler.hasMergeError) {
+            // (merge errors are handled in the onSuccess handler)
+            return FinishReleaseResultCode.MERGE_CONFLICT;
+        } else {
+            NotifyUtil.notifyGitflowReleaseCommandFailed(this.gitflowGitRepository, "Finishing the release '%s' resulted in an error in the following git repositories:", releaseName, result);
+            return FinishReleaseResultCode.FAILED;
+        }
+    }
+
+    protected void mergesBranchesIfMergeConflictOccured(final FinishReleaseResultCode finishReleaseResultCode, final String releaseName, final String tagMessage) {
+        if (finishReleaseResultCode == FinishReleaseResultCode.MERGE_CONFLICT) {
+
+            final boolean mergeOfAllBranchesAndRepositoriesWasSuccessful = this.myGitflow.mergeBranches(this.gitflowGitRepository);
+
+            if (mergeOfAllBranchesAndRepositoriesWasSuccessful) {
+                performFinishReleaseCommandInBackground(releaseName, tagMessage);
+            }
+        }
     }
 
 }

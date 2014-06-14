@@ -15,6 +15,7 @@ import com.intellij.testFramework.fixtures.JavaCodeInsightTestFixture;
 import com.intellij.testFramework.fixtures.ModuleFixture;
 import com.intellij.testFramework.fixtures.TestFixtureBuilder;
 import git4idea.GitUtil;
+import git4idea.commands.GitCommandResult;
 import git4idea.repo.GitRepository;
 import gitflow.Gitflow;
 import gitflow.GitflowInitOptions;
@@ -99,13 +100,24 @@ public class TestUtils {
     // Gitflow helpers ////////////////////////////////////////////////////////
 
     public static void enableGitflow(final GitRepository gitRepository, final GitflowInitOptions gitflowInitOptions) {
-        Gitflow gitflow = ServiceManager.getService(Gitflow.class);
-        gitflow.initRepo(gitRepository, gitflowInitOptions);
+        final Gitflow gitflow = ServiceManager.getService(Gitflow.class);
+        final GitCommandResult gitCommandResult = gitflow.initRepo(gitRepository, gitflowInitOptions);
+
+        assertThat(gitCommandResult.success(), is(true));
     }
 
     public static void startHotfix(final GitRepository gitRepository, final String hotfixName) {
-        Gitflow gitflow = ServiceManager.getService(Gitflow.class);
-        gitflow.startHotfix(gitRepository, hotfixName);
+        final Gitflow gitflow = ServiceManager.getService(Gitflow.class);
+        final GitCommandResult gitCommandResult = gitflow.startHotfix(gitRepository, hotfixName);
+
+        assertThat(gitCommandResult.success(), is(true));
+    }
+
+    public static void startRelease(final GitRepository gitRepository, final String releaseName) {
+        final Gitflow gitflow = ServiceManager.getService(Gitflow.class);
+        final GitCommandResult gitCommandResult = gitflow.startRelease(gitRepository, releaseName);
+
+        assertThat(gitCommandResult.success(), is(true));
     }
 
     // Git command helpers ////////////////////////////////////////////////////

@@ -49,9 +49,9 @@ public class StartReleaseAction extends GitflowAction {
         final boolean startReleaseHotfixCommandWasSuccessful = result.success();
 
         if (startReleaseHotfixCommandWasSuccessful) {
-            NotifyUtil.notifyGitflowWorkflowCommandSuccess(this.gitflowGitRepository, "A new release '%s' was created in the following git repositories:", releaseName);
+            NotifyUtil.notifyGitflowReleaseCommandSuccess(this.gitflowGitRepository, "A new release '%s' was created in the following git repositories:", releaseName);
         } else {
-            NotifyUtil.notifyGitflowWorkflowCommandFailed(this.gitflowGitRepository, "Starting a new release '%s' resulted in an error in the following git repositories:", releaseName, result);
+            NotifyUtil.notifyGitflowReleaseCommandFailed(this.gitflowGitRepository, "Starting a new release '%s' resulted in an error in the following git repositories:", releaseName, result);
         }
 
         this.gitflowGitRepository.update();

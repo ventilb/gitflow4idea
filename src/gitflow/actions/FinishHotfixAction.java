@@ -10,8 +10,6 @@ import gitflow.ui.NotifyUtil;
 import gitflow.ui.WorkflowUtil;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Set;
-
 public class FinishHotfixAction extends GitflowAction {
 
     FinishHotfixAction() {
@@ -54,9 +52,9 @@ public class FinishHotfixAction extends GitflowAction {
         final boolean finishHotfixCommandWasSuccessful = result.success();
 
         if (finishHotfixCommandWasSuccessful) {
-            NotifyUtil.notifyGitflowWorkflowCommandSuccess(this.gitflowGitRepository, "The hotfix '%s' was merged into the following git repositories:", hotfixName);
+            NotifyUtil.notifyGitflowHotfixCommandSuccess(this.gitflowGitRepository, "The hotfix '%s' was merged into the following git repositories:", hotfixName);
         } else {
-            NotifyUtil.notifyGitflowWorkflowCommandFailed(this.gitflowGitRepository, "Finishing the hotfix '%s' resulted in an error in the following git repositories:", hotfixName, result);
+            NotifyUtil.notifyGitflowHotfixCommandFailed(this.gitflowGitRepository, "Finishing the hotfix '%s' resulted in an error in the following git repositories:", hotfixName, result);
         }
 
         this.gitflowGitRepository.update();

@@ -1,10 +1,17 @@
 package gitflow;
 
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.vcs.VcsException;
+import com.intellij.openapi.vfs.VirtualFileManager;
 import git4idea.commands.*;
+import git4idea.merge.GitMerger;
 import git4idea.repo.GitRemote;
 import git4idea.repo.GitRepository;
+import gitflow.actions.GitflowActions;
 import gitflow.git.GitflowGitCommandResult;
 import gitflow.git.GitflowGitRepository;
+import gitflow.ui.NotifyUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -253,6 +260,20 @@ public class GitflowImpl extends GitImpl implements Gitflow {
         return run(h);
     }
 
+    @Override
+    public GitflowGitCommandResult finishRelease(@NotNull GitflowGitRepository gitflowGitRepository, @NotNull String releaseName, @NotNull String tagMessage, @Nullable GitLineHandlerListener... listeners) {
+        final GitflowGitCommandResult gitflowGitCommandResult = new GitflowGitCommandResult();
+
+        GitCommandResult gitCommandResult;
+        for (GitRepository gitRepository : gitflowGitRepository.gitRepositories()) {
+            gitCommandResult = finishRelease(gitRepository, releaseName, tagMessage, listeners);
+            gitflowGitCommandResult.setGitCommandResultForGitRepository(gitRepository, gitCommandResult);
+        }
+
+        return gitflowGitCommandResult;
+    }
+
+
     public GitCommandResult finishRelease(@NotNull GitRepository repository,
                                           @NotNull String releaseName,
                                           @NotNull String tagMessage,
@@ -319,10 +340,10 @@ public class GitflowImpl extends GitImpl implements Gitflow {
     }
 
 
-    //hotfix
+    // hotfix
 
     public GitflowGitCommandResult startHotfix(@NotNull GitflowGitRepository gitflowGitRepository, @NotNull String hotfixName,
-                            @Nullable GitLineHandlerListener... listeners) {
+                                               @Nullable GitLineHandlerListener... listeners) {
         final GitflowGitCommandResult gitflowGitCommandResult = new GitflowGitCommandResult();
 
         GitCommandResult gitCommandResult;
@@ -413,4 +434,60 @@ public class GitflowImpl extends GitImpl implements Gitflow {
         }
     }
 
+    // Merge
+
+    @Override
+    public boolean mergeBranches(@NotNull GitflowGitRepository repository) {
+        final VirtualFileManager virtualFileManager = VirtualFileManager.getInstance();
+
+        //ugly, but required for intellij to catch up with the external changes made by
+        //the CLI before being able to run the merge tool
+        virtualFileManager.syncRefresh();
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException ignored) {
+        }
+
+
+        GitflowActions.runMergeTool();
+
+        boolean allRepositoriesMerged = true;
+
+        boolean mergeOfRepositoryWasSuccessful;
+        for (GitRepository gitRepository : repository.gitRepositories()) {
+            mergeOfRepositoryWasSuccessful = mergeBranches(gitRepository);
+
+            allRepositoriesMerged &= mergeOfRepositoryWasSuccessful;
+
+        }
+
+        return allRepositoriesMerged;
+    }
+
+    public boolean mergeBranches(final GitRepository gitRepository) {
+        final Project project = gitRepository.getProject();
+        gitRepository.update();
+
+        //if merge was completed successfully, finish the action
+        //note that if it wasn't intellij is left in the "merging state", and git4idea provides no UI way to resolve it
+        //merging can be done via intellij itself or any other util
+        int answer = Messages.showYesNoDialog(project, "Was the merge completed succesfully?", "Merge", Messages.getQuestionIcon());
+        if (answer == 0) {
+            GitMerger gitMerger = new GitMerger(project);
+
+            try {
+                gitMerger.mergeCommit(gitMerger.getMergingRoots());
+            } catch (VcsException e1) {
+                NotifyUtil.notifyError(project, "Error", "Error committing merge result");
+                e1.printStackTrace();
+            }
+
+            return true;
+        } else {
+
+            NotifyUtil.notifyInfo(project, "Merge incomplete", "To manually complete the merge choose VCS > Git > Resolve Conflicts.\n" +
+                    "Once done, commit the merged files.\n");
+            return false;
+        }
+    }
 }
