@@ -10,6 +10,9 @@ import gitflow.git.GitflowGitCommandResult;
 import gitflow.git.GitflowGitRepository;
 import gitflow.git.GitflowPerRepositoryReadConfig;
 import gitflow.git.RepositoryConfig;
+import gitflow.ui.notifications.HtmlFragmentNotificationBuilder;
+import gitflow.ui.notifications.NotificationMessageBuilder;
+import gitflow.ui.notifications.NotificationMessageForEachBuilder;
 import org.jetbrains.annotations.NotNull;
 
 public class NotifyUtil {
@@ -39,7 +42,7 @@ public class NotifyUtil {
     private static void notify(NotificationType type, NotificationGroup group, Project project, String title, String message) {
         group.createNotification(title, message, type, null).notify(project);
     }
-// TODO Zuviel redundanz. Das Builder Pattern um die Messages zu erstellen scheint mir hier angebracht
+
     /**
      * Notifies the user that a gitflow workflow was successful. The {@code messageIntro} parameter should state which
      * gitflow command was successful.
@@ -47,30 +50,31 @@ public class NotifyUtil {
      * @param gitflowGitRepository the gitflow git repository
      * @param messageIntro         the message intro
      */
-    public static void notifyGitflowWorkflowCommandSuccess(final GitflowGitRepository gitflowGitRepository, final String messageIntro) {
+    public static void notifyGitflowWorkflowCommandSuccess(@NotNull final GitflowGitRepository gitflowGitRepository, @NotNull final String messageIntro) {
         final Project project = gitflowGitRepository.getProject();
         final GitflowPerRepositoryReadConfig gitflowPerRepositoryReadConfig = gitflowGitRepository.getGitflowPerRepositoryReadConfig();
 
-        final StringBuilder workflowStartedMessage = new StringBuilder(messageIntro);
+        final HtmlFragmentNotificationBuilder notificationBuilder = new HtmlFragmentNotificationBuilder();
+        notificationBuilder.addMessage(messageIntro)
+                .startUnorderedList()
+                .forEach(gitflowPerRepositoryReadConfig.repositoryConfigs(), new NotificationMessageForEachBuilder<RepositoryConfig>() {
+                    @Override
+                    public void forEachItem(RepositoryConfig repositoryConfig, NotificationMessageBuilder notificationMessageBuilder) {
+                        notificationMessageBuilder.startListItem().addRepositoryName(repositoryConfig).endListItem();
+                    }
+                })
+                .endUnorderedList();
 
-        workflowStartedMessage.append("<ul>");
-        for (RepositoryConfig repositoryConfig : gitflowPerRepositoryReadConfig.repositoryConfigs()) {
-            workflowStartedMessage.append("<li>")
-                    .append(PrettyFormat.repositoryName(repositoryConfig))
-                    .append("</li>");
-        }
-        workflowStartedMessage.append("</ul>");
-
-        NotifyUtil.notifySuccess(project, "Success", workflowStartedMessage.toString());
+        NotifyUtil.notifySuccess(project, "Success", notificationBuilder.toString());
     }
 
     /**
      * Notifies the user that a gitflow workflow has failed. The {@code messageIntro} parameter should state which
      * gitflow command failed.
      *
-     * @param gitflowGitRepository   the gitflow git repository
-     * @param messageIntro           the message intro
-     * @param result                 the gitflow command result object
+     * @param gitflowGitRepository the gitflow git repository
+     * @param messageIntro         the message intro
+     * @param result               the gitflow command result object
      */
     public static void notifyGitflowWorkflowCommandFailed(@NotNull final GitflowGitRepository gitflowGitRepository, @NotNull final String messageIntro, @NotNull final GitflowGitCommandResult result) {
         final Project project = gitflowGitRepository.getProject();
@@ -78,17 +82,19 @@ public class NotifyUtil {
 
         final GitRepository[] failedGitRepositories = result.getFailedGitRepositories();
 
-        final StringBuilder workflowFailedMessage = new StringBuilder(messageIntro);
+        final HtmlFragmentNotificationBuilder notificationBuilder = new HtmlFragmentNotificationBuilder();
+        notificationBuilder.addMessage(messageIntro)
+                .startUnorderedList()
+                .forEach(gitflowPerRepositoryReadConfig.repositoryConfigs(failedGitRepositories), new NotificationMessageForEachBuilder<RepositoryConfig>() {
+                    @Override
+                    public void forEachItem(RepositoryConfig repositoryConfig, NotificationMessageBuilder notificationMessageBuilder) {
+                        notificationMessageBuilder.startListItem().addRepositoryName(repositoryConfig).endListItem();
+                    }
+                })
+                .endUnorderedList()
+                .addMessage("Please also have a look at the Version Control console for more details.");
 
-        workflowFailedMessage.append("<ul>");
-        for (RepositoryConfig repositoryConfig : gitflowPerRepositoryReadConfig.repositoryConfigs(failedGitRepositories)) {
-            workflowFailedMessage.append("<li>")
-                    .append(PrettyFormat.repositoryName(repositoryConfig))
-                    .append("</li>");
-        }
-        workflowFailedMessage.append("</ul>Please also have a look at the Version Control console for more details.");
-
-        NotifyUtil.notifyError(project, "Error", workflowFailedMessage.toString());
+        NotifyUtil.notifyError(project, "Error", notificationBuilder.toString());
     }
 
     /**
@@ -104,17 +110,18 @@ public class NotifyUtil {
         final Project project = gitflowGitRepository.getProject();
         final GitflowPerRepositoryReadConfig gitflowPerRepositoryReadConfig = gitflowGitRepository.getGitflowPerRepositoryReadConfig();
 
-        final StringBuilder workflowStartedMessage = new StringBuilder(String.format(messageIntro, workflowUserInputValue));
+        final HtmlFragmentNotificationBuilder notificationBuilder = new HtmlFragmentNotificationBuilder();
+        notificationBuilder.addMessage(messageIntro, workflowUserInputValue)
+                .startUnorderedList()
+                .forEach(gitflowPerRepositoryReadConfig.repositoryConfigs(), new NotificationMessageForEachBuilder<RepositoryConfig>() {
+                    @Override
+                    public void forEachItem(RepositoryConfig repositoryConfig, NotificationMessageBuilder notificationMessageBuilder) {
+                        notificationMessageBuilder.startListItem().addHotfixBranchAndRepositoryName(repositoryConfig, workflowUserInputValue).endListItem();
+                    }
+                })
+                .endUnorderedList();
 
-        workflowStartedMessage.append("<ul>");
-        for (RepositoryConfig repositoryConfig : gitflowPerRepositoryReadConfig.repositoryConfigs()) {
-            workflowStartedMessage.append("<li>")
-                    .append(PrettyFormat.hotfixBranchAndRepositoryName(repositoryConfig, workflowUserInputValue))
-                    .append("</li>");
-        }
-        workflowStartedMessage.append("</ul>");
-
-        NotifyUtil.notifySuccess(project, workflowUserInputValue, workflowStartedMessage.toString());
+        NotifyUtil.notifySuccess(project, workflowUserInputValue, notificationBuilder.toString());
     }
 
     /**
@@ -130,17 +137,18 @@ public class NotifyUtil {
         final Project project = gitflowGitRepository.getProject();
         final GitflowPerRepositoryReadConfig gitflowPerRepositoryReadConfig = gitflowGitRepository.getGitflowPerRepositoryReadConfig();
 
-        final StringBuilder workflowStartedMessage = new StringBuilder(String.format(messageIntro, workflowUserInputValue));
+        final HtmlFragmentNotificationBuilder notificationBuilder = new HtmlFragmentNotificationBuilder();
+        notificationBuilder.addMessage(messageIntro, workflowUserInputValue)
+                .startUnorderedList()
+                .forEach(gitflowPerRepositoryReadConfig.repositoryConfigs(), new NotificationMessageForEachBuilder<RepositoryConfig>() {
+                    @Override
+                    public void forEachItem(RepositoryConfig repositoryConfig, NotificationMessageBuilder notificationMessageBuilder) {
+                        notificationMessageBuilder.startListItem().addReleaseBranchAndRepositoryName(repositoryConfig, workflowUserInputValue).endListItem();
+                    }
+                })
+                .endUnorderedList();
 
-        workflowStartedMessage.append("<ul>");
-        for (RepositoryConfig repositoryConfig : gitflowPerRepositoryReadConfig.repositoryConfigs()) {
-            workflowStartedMessage.append("<li>")
-                    .append(PrettyFormat.releaseBranchAndRepositoryName(repositoryConfig, workflowUserInputValue))
-                    .append("</li>");
-        }
-        workflowStartedMessage.append("</ul>");
-
-        NotifyUtil.notifySuccess(project, workflowUserInputValue, workflowStartedMessage.toString());
+        NotifyUtil.notifySuccess(project, workflowUserInputValue, notificationBuilder.toString());
     }
 
     /**
@@ -159,17 +167,19 @@ public class NotifyUtil {
 
         final GitRepository[] failedGitRepositories = result.getFailedGitRepositories();
 
-        final StringBuilder workflowFailedMessage = new StringBuilder(String.format(messageIntro, workflowUserInputValue));
+        final HtmlFragmentNotificationBuilder notificationBuilder = new HtmlFragmentNotificationBuilder();
+        notificationBuilder.addMessage(messageIntro, workflowUserInputValue)
+                .startUnorderedList()
+                .forEach(gitflowPerRepositoryReadConfig.repositoryConfigs(failedGitRepositories), new NotificationMessageForEachBuilder<RepositoryConfig>() {
+                    @Override
+                    public void forEachItem(RepositoryConfig repositoryConfig, NotificationMessageBuilder notificationMessageBuilder) {
+                        notificationMessageBuilder.startListItem().addHotfixBranchAndRepositoryName(repositoryConfig, workflowUserInputValue).endListItem();
+                    }
+                })
+                .endUnorderedList()
+                .addMessage("Please also have a look at the Version Control console for more details.");
 
-        workflowFailedMessage.append("<ul>");
-        for (RepositoryConfig repositoryConfig : gitflowPerRepositoryReadConfig.repositoryConfigs(failedGitRepositories)) {
-            workflowFailedMessage.append("<li>")
-                    .append(PrettyFormat.hotfixBranchAndRepositoryName(repositoryConfig, workflowUserInputValue))
-                    .append("</li>");
-        }
-        workflowFailedMessage.append("</ul>Please also have a look at the Version Control console for more details.");
-
-        NotifyUtil.notifyError(project, "Error", workflowFailedMessage.toString());
+        NotifyUtil.notifyError(project, "Error", notificationBuilder.toString());
     }
 
     /**
@@ -188,16 +198,18 @@ public class NotifyUtil {
 
         final GitRepository[] failedGitRepositories = result.getFailedGitRepositories();
 
-        final StringBuilder workflowFailedMessage = new StringBuilder(String.format(messageIntro, workflowUserInputValue));
+        final HtmlFragmentNotificationBuilder notificationBuilder = new HtmlFragmentNotificationBuilder();
+        notificationBuilder.addMessage(messageIntro, workflowUserInputValue)
+                .startUnorderedList()
+                .forEach(gitflowPerRepositoryReadConfig.repositoryConfigs(failedGitRepositories), new NotificationMessageForEachBuilder<RepositoryConfig>() {
+                    @Override
+                    public void forEachItem(RepositoryConfig repositoryConfig, NotificationMessageBuilder notificationMessageBuilder) {
+                        notificationMessageBuilder.startListItem().addReleaseBranchAndRepositoryName(repositoryConfig, workflowUserInputValue).endListItem();
+                    }
+                })
+                .endUnorderedList()
+                .addMessage("Please also have a look at the Version Control console for more details.");
 
-        workflowFailedMessage.append("<ul>");
-        for (RepositoryConfig repositoryConfig : gitflowPerRepositoryReadConfig.repositoryConfigs(failedGitRepositories)) {
-            workflowFailedMessage.append("<li>")
-                    .append(PrettyFormat.releaseBranchAndRepositoryName(repositoryConfig, workflowUserInputValue))
-                    .append("</li>");
-        }
-        workflowFailedMessage.append("</ul>Please also have a look at the Version Control console for more details.");
-
-        NotifyUtil.notifyError(project, "Error", workflowFailedMessage.toString());
+        NotifyUtil.notifyError(project, "Error", notificationBuilder.toString());
     }
 }
