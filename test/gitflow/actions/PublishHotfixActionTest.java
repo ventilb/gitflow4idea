@@ -53,6 +53,7 @@ public class PublishHotfixActionTest extends JavaCodeInsightFixtureTestCase {
         Hotfix-Branch.
          */
         GitflowAsserts.assertBranchNames(this.testFixture2.projectRepositoryRemoteRoot, "master", GitflowConfigUtil.DEFAULT_PREFIX_HOTFIX + "Test-Hotfix");
+        GitflowAsserts.assertBranchNames(this.testFixture2.moduleRepositoryRemoteRoot, "master", GitflowConfigUtil.DEFAULT_PREFIX_HOTFIX + "Test-Hotfix");
     }
 
     private TestFixture2 testFixture2;
