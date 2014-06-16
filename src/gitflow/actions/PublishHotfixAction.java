@@ -5,7 +5,9 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
 import git4idea.commands.GitCommandResult;
 import gitflow.GitflowConfigUtil;
+import gitflow.git.GitflowGitCommandResult;
 import gitflow.ui.NotifyUtil;
+import gitflow.ui.WorkflowUtil;
 import org.jetbrains.annotations.NotNull;
 
 public class PublishHotfixAction extends GitflowAction {
@@ -17,24 +19,39 @@ public class PublishHotfixAction extends GitflowAction {
     public void actionPerformed(AnActionEvent anActionEvent) {
         super.actionPerformed(anActionEvent);
 
-        final String hotfixName = GitflowConfigUtil.getHotfixNameFromBranch(myProject, currentBranchName);
+        if (WorkflowUtil.areAllGitRepositoriesOnSameAndValidBranchOrNotify(this.gitflowGitRepository)) {
+            performAsyncPublishHotfixAction();
+        }
+    }
+
+    protected void performAsyncPublishHotfixAction() {
+        final String hotfixName = WorkflowUtil.getUniqueHotfixNameOrNotify(this.gitflowGitRepository);
+
+        if (hotfixName != null) {
+            new Task.Backgroundable(this.myProject, "Publishing hotfix " + hotfixName, false) {
+                @Override
+                public void run(@NotNull ProgressIndicator indicator) {
+                    performPublishHotfixCommand(hotfixName);
+                }
+            }.queue();
+        }
+    }
+
+    protected boolean performPublishHotfixCommand(final String hotfixName) {
         final GitflowErrorsListener errorLineHandler = new GitflowErrorsListener(myProject);
 
-        new Task.Backgroundable(myProject, "Publishing hotfix " + hotfixName, false) {
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
-                GitCommandResult result = myGitflow.publishHotfix(repo, hotfixName, errorLineHandler);
+        final GitflowGitCommandResult result = myGitflow.publishHotfix(this.gitflowGitRepository, hotfixName, errorLineHandler);
 
-                if (result.success()) {
-                    String publishedHotfixMessage = String.format("A new remote branch '%s%s' was created", hotfixPrefix, hotfixName);
-                    NotifyUtil.notifySuccess(myProject, hotfixName, publishedHotfixMessage);
-                } else {
-                    NotifyUtil.notifyError(myProject, "Error", "Please have a look at the Version Control console for more details");
-                }
+        final boolean publishHotfixCommandWasSuccessful = result.success();
 
-                repo.update();
-            }
-        }.queue();
+        if (publishHotfixCommandWasSuccessful) {
+            NotifyUtil.notifyGitflowHotfixCommandSuccess(this.gitflowGitRepository, "The hotfix '%s' was published to the remote branches:", hotfixName);
+        } else {
+            NotifyUtil.notifyGitflowHotfixCommandFailed(this.gitflowGitRepository, "Publishing the hotfix '%s' to the remote branches failed for the remote branches:", hotfixName, result);
+        }
 
+        this.gitflowGitRepository.update();
+
+        return publishHotfixCommandWasSuccessful;
     }
 }

@@ -9,12 +9,11 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 
 /**
  * Provides assertions to test gitflow specific features.
@@ -78,6 +77,12 @@ public class GitflowAsserts {
 
         assertThat(actualGitflowProductionBranchName, is(expectedGiflowProductionBranchName));
         assertThat(actualGitflowDevelopmentBranchName, is(expectedGiflowDevelopmentBranchName));
+    }
+
+    public static void assertBranchNames(final File repositoryRoot, final String ...expectedBranchNames) throws Exception {
+        final String[] branchNames = TestUtils.listLocalBranchNames(repositoryRoot);
+
+        assertThat(Arrays.asList(branchNames), containsInAnyOrder(expectedBranchNames));
     }
 
     public static void assertGitflowPrefixes(final GitRepository gitRepository, final String expectedFeaturePrefix, final String expectedHotfixPrefix, final String expectedReleasePrefix, final String expectedSupportPrefix) throws Exception {

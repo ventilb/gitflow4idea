@@ -5,20 +5,26 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.fixtures.*;
 import git4idea.GitUtil;
+import git4idea.repo.GitRepository;
 import git4idea.repo.GitRepositoryManager;
+import gitflow.GitflowInitOptions;
 import gitflow.intellij.ProjectAndModules;
 import gitflow.test.TestUtils;
+import org.apache.commons.io.FileUtils;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 
 /**
  * Implements a test fixture with an intellij project and one module. The test fixture creates two git repositories.
- * One for the project root and one for the module.
+ * One for the project root and one for the module. It also creates a remote repository for each local repository and
+ * starts the gitflow hotfix workflow for the repositories.
  *
  * @author <a href="mailto:manuel_schulze@i-entwicklung.de">Manuel Schulze</a>
- * @since 08.06.14 - 19:32
+ * @since 16.06.14 - 20:44
  */
-public class TestFixture1 {
+public class TestFixture2 {
 
     public ProjectAndModules projectAndModules;
 
@@ -30,16 +36,44 @@ public class TestFixture1 {
 
     public VirtualFile module1ContentRoot;
 
-    public String name;
+    public final String name;
 
     public JavaCodeInsightTestFixture myFixture;
 
     public final JavaCodeInsightFixtureTestCase javaCodeInsightFixtureTestCase;
 
-    public TestFixture1(JavaCodeInsightFixtureTestCase javaCodeInsightFixtureTestCase) {
+    public File projectRepositoryRemoteRoot;
+
+    public File moduleRepositoryRemoteRoot;
+
+    public TestFixture2(JavaCodeInsightFixtureTestCase javaCodeInsightFixtureTestCase) {
         this.javaCodeInsightFixtureTestCase = javaCodeInsightFixtureTestCase;
 
         this.name = this.javaCodeInsightFixtureTestCase.getName();
+    }
+
+    public void setUpProjectRepository() throws IOException {
+        this.projectRepositoryRemoteRoot = TestUtils.createDirectoryInTempDir("remote_repos/project");
+        TestUtils.initBareGitRepo(this.projectRepositoryRemoteRoot);
+        TestUtils.initGitRepo(this.project, this.projectBaseDir);
+        TestUtils.setRemoteRepository(this.projectBaseDir, this.projectRepositoryRemoteRoot);
+        TestUtils.addAndCommitTestfile(this.projectBaseDir);
+        TestUtils.fetch(this.projectBaseDir);
+        TestUtils.switchBranch(this.projectBaseDir, "master");
+        TestUtils.createAndCommitGitignoreFile(this.projectBaseDir);
+        TestUtils.push(this.projectBaseDir, "master");
+    }
+
+    public void setUpModuleRepository() throws IOException {
+        this.moduleRepositoryRemoteRoot = TestUtils.createDirectoryInTempDir("remote_repos/module1");
+        TestUtils.initBareGitRepo(this.moduleRepositoryRemoteRoot);
+        TestUtils.initGitRepo(this.project, this.module1ContentRoot);
+        TestUtils.setRemoteRepository(this.module1ContentRoot, this.moduleRepositoryRemoteRoot);
+        TestUtils.addAndCommitTestfile(this.module1ContentRoot);
+        TestUtils.fetch(this.module1ContentRoot);
+        TestUtils.switchBranch(this.module1ContentRoot, "master");
+        TestUtils.createAndCommitGitignoreFile(this.module1ContentRoot);
+        TestUtils.push(this.module1ContentRoot, "master");
     }
 
     public void setUp() throws Exception {
@@ -66,24 +100,32 @@ public class TestFixture1 {
         this.module1ContentRoot = TestUtils.getModuleContentRoot(this.module1);
 
         this.project.save();
+        this.projectAndModules = new ProjectAndModules(this.project, new Module[]{this.module1});
 
-        TestUtils.initGitRepo(this.project, this.projectBaseDir);
-        TestUtils.createAndCommitGitignoreFile(this.projectBaseDir);
-
-        TestUtils.initGitRepo(this.project, this.module1ContentRoot);
-        TestUtils.createAndCommitGitignoreFile(this.module1ContentRoot);
+        setUpProjectRepository();
+        setUpModuleRepository();
 
         // Die folgenden Zeilen sind wichtig, da Intellij sonst unsere Git Repositories nicht erkennt.
         TestUtils.syncFileSystem();
         final GitRepositoryManager manager = GitUtil.getRepositoryManager(this.project);
         manager.directoryMappingChanged();
 
+        final GitRepository projectGitRepository = manager.getRepositoryForRoot(this.projectBaseDir);
+        final GitRepository module1GitRepository = manager.getRepositoryForRoot(this.module1ContentRoot);
+
+        // Gitflow anschalten
+        GitflowInitOptions gitflowInitOptions = new GitflowInitOptions();
+        gitflowInitOptions.setUseDefaults(true);
+
+        TestUtils.enableGitflow(projectGitRepository, gitflowInitOptions);
+        TestUtils.enableGitflow(module1GitRepository, gitflowInitOptions);
+
+        TestUtils.startHotfix(projectGitRepository, "Test-Hotfix");
+        TestUtils.startHotfix(module1GitRepository, "Test-Hotfix");
 
         Field myFixtureField = JavaCodeInsightFixtureTestCase.class.getDeclaredField("myFixture");
         myFixtureField.setAccessible(true);
         myFixtureField.set(this.javaCodeInsightFixtureTestCase, this.myFixture);
-
-        this.projectAndModules = new ProjectAndModules(this.project, new Module[]{this.module1});
     }
 
     public void tearDown() throws Exception {
@@ -101,6 +143,8 @@ public class TestFixture1 {
 
         TestUtils.deleteProjectGitDir(this.projectBaseDir);
         TestUtils.deleteModuleDir(this.module1ContentRoot);
-    }
 
+        FileUtils.forceDelete(this.projectRepositoryRemoteRoot);
+        FileUtils.forceDelete(this.moduleRepositoryRemoteRoot);
+    }
 }

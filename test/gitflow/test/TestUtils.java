@@ -43,7 +43,7 @@ public class TestUtils {
     /**
      * Contains a map of files which were created during a test grouped by git repository root.
      */
-    private static final Hashtable<VirtualFile, List<File>> testFilesCreatedPerRepositoryRoot = new Hashtable<VirtualFile, List<File>>();
+    private static final Hashtable<String, List<File>> testFilesCreatedPerRepositoryRoot = new Hashtable<String, List<File>>();
 
     public static ModuleFixture newProjectModuleFixture(final JavaCodeInsightTestFixture testFixture, final TestFixtureBuilder<IdeaProjectTestFixture> ideaProjectBuilder, final String moduleName) throws IOException {
         final JavaModuleFixtureBuilder moduleFixtureBuilder = ideaProjectBuilder.addModule(JavaModuleFixtureBuilder.class);
@@ -70,7 +70,7 @@ public class TestUtils {
         fw.close();
     }
 
-    public static void registerFileCreatedInTest(final VirtualFile repositoryRoot, final File fileCreated) {
+    public static void registerFileCreatedInTest(final String repositoryRoot, final File fileCreated) {
         final List<File> filesCreated;
         if (testFilesCreatedPerRepositoryRoot.containsKey(repositoryRoot)) {
             filesCreated = testFilesCreatedPerRepositoryRoot.get(repositoryRoot);
@@ -82,9 +82,20 @@ public class TestUtils {
         filesCreated.add(fileCreated);
     }
 
+    public static File createDirectoryInTempDir(final String directoryToCreateName) throws IOException {
+        final File directoryToCreate = new File(FileUtils.getTempDirectory(), directoryToCreateName);
+        FileUtils.forceMkdir(directoryToCreate);
+
+        directoryToCreate.deleteOnExit();
+
+        return directoryToCreate;
+    }
+
     public static void deleteFilesCreatedInTest(final VirtualFile repositoryRoot) throws IOException {
-        if (testFilesCreatedPerRepositoryRoot.containsKey(repositoryRoot)) {
-            final List<File> filesCreatedInTest = testFilesCreatedPerRepositoryRoot.get(repositoryRoot);
+        final String canonicalPath = repositoryRoot.getCanonicalPath();
+
+        if (testFilesCreatedPerRepositoryRoot.containsKey(canonicalPath)) {
+            final List<File> filesCreatedInTest = testFilesCreatedPerRepositoryRoot.get(canonicalPath);
 
             for (File file : filesCreatedInTest) {
                 if (file.exists()) {
@@ -92,8 +103,7 @@ public class TestUtils {
                 }
             }
 
-            filesCreatedInTest.clear();
-            testFilesCreatedPerRepositoryRoot.remove(repositoryRoot);
+            testFilesCreatedPerRepositoryRoot.remove(canonicalPath);
         }
     }
 
@@ -126,6 +136,103 @@ public class TestUtils {
         return performConsoleGitCommand(repositoryRoot.getCanonicalPath(), "config", "--list");
     }
 
+    public static String[] listLocalBranchNames(final File repositoryRoot) throws IOException {
+        final String canonicalPath = repositoryRoot.getCanonicalPath();
+
+        final String branchNamesAsString = performConsoleGitCommand(canonicalPath, "branch", "-a", "--no-color");
+        final String[] branchNames = branchNamesAsString.split("\\n");
+
+        /*
+        Ich habe keinen Weg gefunden, die Markierung des aktiven Branch nicht auszugeben. Daher filtern wir hier diese
+         Markierung.
+         */
+        for (int i = 0; i < branchNames.length; i++) {
+            if (branchNames[i].startsWith("*")) {
+                branchNames[i] = branchNames[i].substring(1);
+            }
+            branchNames[i] = branchNames[i].trim();
+        }
+
+        return branchNames;
+    }
+
+    public static void cloneRemote(final VirtualFile localRepositoryRoot, final File remoteRepositoryRoot) throws IOException {
+        final String localRepositoryCanonicalPath = localRepositoryRoot.getCanonicalPath();
+        final String remoteRepositoryCanonicalPath = remoteRepositoryRoot.getCanonicalPath();
+        performConsoleGitCommand(localRepositoryCanonicalPath, "clone", remoteRepositoryCanonicalPath, localRepositoryCanonicalPath);
+
+        /*
+        Wir haben hier an Intellij vorbei ganz simpel einen Git-Befehl als Prozess abgesetzt. Daher kann das virtuelle
+        Dateisystem von Intellij und das echte Dateisystem nun nicht mehr synchron sein. Für unseren Test müssen wir
+        die Dateisysteme abgleichen.
+         */
+        syncFileSystem();
+    }
+
+    public static void push(final VirtualFile repositoryRoot, final String branchNameToPush) throws IOException {
+        final String canonicalPath = repositoryRoot.getCanonicalPath();
+
+        performConsoleGitCommand(canonicalPath, "push", "origin", branchNameToPush);
+
+        /*
+        Wir haben hier an Intellij vorbei ganz simpel einen Git-Befehl als Prozess abgesetzt. Daher kann das virtuelle
+        Dateisystem von Intellij und das echte Dateisystem nun nicht mehr synchron sein. Für unseren Test müssen wir
+        die Dateisysteme abgleichen.
+         */
+        syncFileSystem();
+    }
+
+    public static void pull(final VirtualFile repositoryRoot, final String branchNameToPull) throws IOException {
+        final String canonicalPath = repositoryRoot.getCanonicalPath();
+
+        performConsoleGitCommand(canonicalPath, "pull", "origin", branchNameToPull);
+
+        /*
+        Wir haben hier an Intellij vorbei ganz simpel einen Git-Befehl als Prozess abgesetzt. Daher kann das virtuelle
+        Dateisystem von Intellij und das echte Dateisystem nun nicht mehr synchron sein. Für unseren Test müssen wir
+        die Dateisysteme abgleichen.
+         */
+        syncFileSystem();
+    }
+
+    public static void fetch(final VirtualFile repositoryRoot) throws IOException {
+        final String canonicalPath = repositoryRoot.getCanonicalPath();
+
+        performConsoleGitCommand(canonicalPath, "fetch");
+
+        /*
+        Wir haben hier an Intellij vorbei ganz simpel einen Git-Befehl als Prozess abgesetzt. Daher kann das virtuelle
+        Dateisystem von Intellij und das echte Dateisystem nun nicht mehr synchron sein. Für unseren Test müssen wir
+        die Dateisysteme abgleichen.
+         */
+        syncFileSystem();
+    }
+
+    public static void setRemoteRepository(final VirtualFile localRepositoryRoot, final File remoteRepositoryRoot) throws IOException {
+        final String localRepositoryCanonicalPath = localRepositoryRoot.getCanonicalPath();
+        final String remoteRepositoryCanonicalPath = remoteRepositoryRoot.getCanonicalPath();
+
+        setRemoteRepository(localRepositoryCanonicalPath, remoteRepositoryCanonicalPath);
+
+        /*
+        Wir haben hier an Intellij vorbei ganz simpel einen Git-Befehl als Prozess abgesetzt. Daher kann das virtuelle
+        Dateisystem von Intellij und das echte Dateisystem nun nicht mehr synchron sein. Für unseren Test müssen wir
+        die Dateisysteme abgleichen.
+         */
+        syncFileSystem();
+    }
+
+    public static void setRemoteRepository(final File localRepositoryRoot, final File remoteRepositoryRoot) throws IOException {
+        final String localRepositoryCanonicalPath = localRepositoryRoot.getCanonicalPath();
+        final String remoteRepositoryCanonicalPath = remoteRepositoryRoot.getCanonicalPath();
+
+        setRemoteRepository(localRepositoryCanonicalPath, remoteRepositoryCanonicalPath);
+    }
+
+    public static void setRemoteRepository(final String localRepositoryRoot, final String remoteRepositoryRoot) throws IOException {
+        performConsoleGitCommand(localRepositoryRoot, "remote", "add", "origin", remoteRepositoryRoot);
+    }
+
     public static void switchBranch(final GitRepository gitRepository, final String targetBranch) throws IOException {
         final VirtualFile repositoryRoot = gitRepository.getRoot();
         switchBranch(repositoryRoot, targetBranch);
@@ -147,8 +254,17 @@ public class TestUtils {
         performConsoleGitCommand(repositoryRoot.getCanonicalPath(), "branch", branchName);
     }
 
+    public static File addAndCommitTestfile(final File repositoryRoot) throws IOException {
+        final String canonicalPath = repositoryRoot.getCanonicalPath();
+        return addAndCommitTestfile(canonicalPath);
+    }
+
     public static File addAndCommitTestfile(final VirtualFile repositoryRoot) throws IOException {
-        final File testfileCreated = new File(repositoryRoot.getCanonicalPath(), "ATestFile.txt");
+        return addAndCommitTestfile(repositoryRoot.getCanonicalPath());
+    }
+
+    public static File addAndCommitTestfile(final String repositoryRoot) throws IOException {
+        final File testfileCreated = new File(repositoryRoot, "ATestFile.txt");
         assertThat(testfileCreated.createNewFile(), is(true));
         testfileCreated.deleteOnExit();
 
@@ -160,8 +276,13 @@ public class TestUtils {
         return testfileCreated;
     }
 
+    public static void add(final String repositoryRoot, final File fileToAdd) throws IOException {
+        performConsoleGitCommand(repositoryRoot, "add", fileToAdd.getCanonicalPath());
+    }
+
     public static void add(final VirtualFile repositoryRoot, final File fileToAdd) throws IOException {
-        performConsoleGitCommand(repositoryRoot.getCanonicalPath(), "add", fileToAdd.getCanonicalPath());
+        add(repositoryRoot.getCanonicalPath(), fileToAdd);
+
         /*
         Wir haben hier an Intellij vorbei ganz simpel einen Git-Befehl als Prozess abgesetzt. Daher kann das virtuelle
         Dateisystem von Intellij und das echte Dateisystem nun nicht mehr synchron sein. Für unseren Test müssen wir
@@ -170,8 +291,12 @@ public class TestUtils {
         syncFileSystem();
     }
 
+    public static void commit(final String repositoryRoot, final String oneLineCommitMessage) throws IOException {
+        performConsoleGitCommand(repositoryRoot, "commit", "-a", "-m", oneLineCommitMessage);
+    }
+
     public static void commit(final VirtualFile repositoryRoot, final String oneLineCommitMessage) throws IOException {
-        performConsoleGitCommand(repositoryRoot.getCanonicalPath(), "commit", "-a", "-m", oneLineCommitMessage);
+        commit(repositoryRoot.getCanonicalPath(), oneLineCommitMessage);
 
         /*
         Wir haben hier an Intellij vorbei ganz simpel einen Git-Befehl als Prozess abgesetzt. Daher kann das virtuelle
@@ -186,16 +311,6 @@ public class TestUtils {
 
         ProjectLevelVcsManager projectLevelVcsManager = ProjectLevelVcsManager.getInstance(project);
         projectLevelVcsManager.setDirectoryMapping(virtualFile.getCanonicalPath(), "Git");
-    }
-
-    public static void initGitRepo(final VirtualFile repositoryRoot) throws IOException {
-        final String canonicalPath = repositoryRoot.getCanonicalPath();
-
-        performConsoleGitCommand(canonicalPath, "init", canonicalPath);
-        performConsoleGitCommand(canonicalPath, "config", "user.name", "Unit Testcase");
-        performConsoleGitCommand(canonicalPath, "config", "user.email", "unit_testcase@nonexistent.com");
-
-        createAndCommitGitignoreFile(repositoryRoot);
 
         /*
         Wir haben hier an Intellij vorbei ganz simpel einen Git-Befehl als Prozess abgesetzt. Daher kann das virtuelle
@@ -205,10 +320,43 @@ public class TestUtils {
         syncFileSystem();
     }
 
+    public static void initBareGitRepo(final File repositoryRoot) throws IOException {
+        final String canonicalPath = repositoryRoot.getCanonicalPath();
+        initBareGitRepo(canonicalPath);
+    }
+
+    public static void initBareGitRepo(final String repositoryRoot) throws IOException {
+        performConsoleGitCommand(repositoryRoot, "--bare", "init", repositoryRoot);
+        setInitRepoGitConfig(repositoryRoot);
+    }
+
+    public static void initGitRepo(final File repositoryRoot) throws IOException {
+        final String canonicalPath = repositoryRoot.getCanonicalPath();
+        initGitRepo(canonicalPath);
+    }
+
+    public static void initGitRepo(final VirtualFile repositoryRoot) throws IOException {
+        final String canonicalPath = repositoryRoot.getCanonicalPath();
+        initGitRepo(canonicalPath);
+    }
+
+    public static void initGitRepo(final String repositoryRoot) throws IOException {
+        performConsoleGitCommand(repositoryRoot, "init", repositoryRoot);
+        setInitRepoGitConfig(repositoryRoot);
+    }
+
+    public static void setInitRepoGitConfig(final String repositoryRoot) throws IOException {
+        performConsoleGitCommand(repositoryRoot, "config", "user.name", "Unit Testcase");
+        performConsoleGitCommand(repositoryRoot, "config", "user.email", "unit_testcase@nonexistent.com");
+    }
+
     public static void createAndCommitGitignoreFile(final VirtualFile repositoryRoot) throws IOException {
         final String canonicalPath = repositoryRoot.getCanonicalPath();
+        createAndCommitGitignoreFile(canonicalPath);
+    }
 
-        final File gitignoreFile = new File(canonicalPath, ".gitignore");
+    public static void createAndCommitGitignoreFile(final String repositoryRoot) throws IOException {
+        final File gitignoreFile = new File(repositoryRoot, ".gitignore");
         final FileWriter gitignoreFileWriter = new FileWriter(gitignoreFile);
 
         /*
@@ -216,7 +364,7 @@ public class TestUtils {
         in ein anderes Verzeichnis als /tmp zu erstellen. Da git aber dann wegen "Unstaged Changes" meckert ignoriere
         ich alles.
          */
-        final Collection<File> filesToIgnore = FileUtils.listFilesAndDirs(new File(canonicalPath), TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
+        final Collection<File> filesToIgnore = FileUtils.listFilesAndDirs(new File(repositoryRoot), TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
         for (File fileToIgnore : filesToIgnore) {
             if (!".gitignore".equals(fileToIgnore.getName())) {
                 gitignoreFileWriter.append(fileToIgnore.getName()).append("\n");
@@ -270,6 +418,15 @@ public class TestUtils {
          */
         String stderrValueString = stderrValue.toString();
         if (stderrValueString.startsWith("Switched to branch")) {
+            stdinValue.append(stderrValueString);
+            stderrValueString = "";
+        } else if (stderrValueString.startsWith("From") && stderrValueString.contains("[new branch]")) {
+            stdinValue.append(stderrValueString);
+            stderrValueString = "";
+        } else if (stderrValueString.startsWith("To") && stderrValueString.contains("[new branch]")) {
+            stdinValue.append(stderrValueString);
+            stderrValueString = "";
+        } else if (stderrValueString.startsWith("Already on ")) {
             stdinValue.append(stderrValueString);
             stderrValueString = "";
         }
