@@ -47,7 +47,7 @@ public class FinishHotfixAction extends GitflowAction {
 
     protected boolean performFinishHotfixCommand(final String hotfixName, final String tagMessage) {
         final GitflowErrorsListener errorLineHandler = new GitflowErrorsListener(this.myProject);
-        GitflowGitCommandResult result = this.myGitflow.finishHotfix(this.gitflowGitRepository, hotfixName, tagMessage, errorLineHandler);
+        final GitflowGitCommandResult result = this.myGitflow.finishHotfix(this.gitflowGitRepository, hotfixName, tagMessage, errorLineHandler);
 
         final boolean finishHotfixCommandWasSuccessful = result.success();
 
