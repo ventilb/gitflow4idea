@@ -5,12 +5,14 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
 import git4idea.commands.GitCommandResult;
 import gitflow.GitflowConfigUtil;
+import gitflow.git.GitflowGitCommandResult;
 import gitflow.ui.NotifyUtil;
+import gitflow.ui.WorkflowUtil;
 import org.jetbrains.annotations.NotNull;
 
 public class PublishReleaseAction extends GitflowAction {
 
-    PublishReleaseAction(){
+    PublishReleaseAction() {
         super("Publish Release");
     }
 
@@ -18,25 +20,39 @@ public class PublishReleaseAction extends GitflowAction {
     public void actionPerformed(AnActionEvent anActionEvent) {
         super.actionPerformed(anActionEvent);
 
-        final String releaseName= GitflowConfigUtil.getReleaseNameFromBranch(myProject, currentBranchName);
+        if (WorkflowUtil.areAllGitRepositoriesOnSameAndValidBranchOrNotify(this.gitflowGitRepository)) {
+            performAsyncPublishReleaseAction();
+        }
+    }
+
+    protected void performAsyncPublishReleaseAction() {
+        final String releaseName = WorkflowUtil.getUniqueReleaseNameOrNotify(this.gitflowGitRepository);
+
+        if (releaseName != null) {
+            new Task.Backgroundable(myProject, "Publishing release " + releaseName, false) {
+                @Override
+                public void run(@NotNull ProgressIndicator indicator) {
+                    performPublishReleaseCommand(releaseName);
+                }
+            }.queue();
+        }
+    }
+
+    protected boolean performPublishReleaseCommand(final String releaseName) {
         final GitflowErrorsListener errorLineHandler = new GitflowErrorsListener(myProject);
 
-        new Task.Backgroundable(myProject,"Publishing release "+releaseName,false){
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
-                GitCommandResult result = myGitflow.publishRelease(repo, releaseName, errorLineHandler);
+        final GitflowGitCommandResult result = this.myGitflow.publishRelease(this.gitflowGitRepository, releaseName, errorLineHandler);
 
-                if (result.success()) {
-                    String publishedReleaseMessage = String.format("A new remote branch '%s%s' was created", releasePrefix, releaseName);
-                    NotifyUtil.notifySuccess(myProject, releaseName, publishedReleaseMessage);
-                }
-                else {
-                    NotifyUtil.notifyError(myProject, "Error", "Please have a look at the Version Control console for more details");
-                }
+        final boolean publishReleaseCommandWasSuccessful = result.success();
 
-                repo.update();
-            }
-        }.queue();
+        if (publishReleaseCommandWasSuccessful) {
+            NotifyUtil.notifyGitflowReleaseCommandSuccess(this.gitflowGitRepository, "The release '%s' was published to the remote branches:", releaseName);
+        } else {
+            NotifyUtil.notifyGitflowReleaseCommandFailed(this.gitflowGitRepository, "Publishing the hotfix '%s' to the remote branches failed for the remote branches:", releaseName, result);
+        }
 
+        this.gitflowGitRepository.update();
+
+        return publishReleaseCommandWasSuccessful;
     }
 }

@@ -11,6 +11,7 @@ import gitflow.GitflowInitOptions;
 import gitflow.fixtures.TestFixture2;
 import gitflow.git.GitflowGitRepository;
 import gitflow.test.GitflowAsserts;
+import gitflow.test.TestUtils;
 import org.junit.Test;
 
 import static org.hamcrest.Matchers.is;
@@ -27,21 +28,15 @@ public class PublishHotfixActionTest extends JavaCodeInsightFixtureTestCase {
     @Test
     public void testPerformPublishHotfixCommand() throws Exception {
         // Testfix erstellen
-        final GitRepositoryManager manager = GitUtil.getRepositoryManager(getProject());
-
-        final GitRepository projectGitRepository = manager.getRepositoryForRoot(this.testFixture2.projectBaseDir);
-        final GitRepository module1GitRepository = manager.getRepositoryForRoot(this.testFixture2.module1ContentRoot);
-
-        final GitflowGitRepository gitflowGitRepository = new GitflowGitRepository(this.testFixture2.projectAndModules);
-        gitflowGitRepository.addGitRepository(projectGitRepository);
-        gitflowGitRepository.addGitRepository(module1GitRepository);
+        TestUtils.startHotfix(this.testFixture2.projectGitRepository, "Test-Hotfix");
+        TestUtils.startHotfix(this.testFixture2.module1GitRepository, "Test-Hotfix");
 
         // Test durchführen
         final PublishHotfixAction publishHotfixAction = new PublishHotfixAction();
         publishHotfixAction.setProject(this.testFixture2.project);
         publishHotfixAction.setVirtualFileMananger(VirtualFileManager.getInstance());
         publishHotfixAction.setBranchUtil(new GitflowBranchUtil(this.testFixture2.project));
-        publishHotfixAction.setGitflowGitRepository(gitflowGitRepository);
+        publishHotfixAction.setGitflowGitRepository(this.testFixture2.gitflowGitRepository);
 
         final boolean publishHotfixCommandWasSuccessful = publishHotfixAction.performPublishHotfixCommand("Test-Hotfix");
 

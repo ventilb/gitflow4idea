@@ -8,6 +8,7 @@ import git4idea.GitUtil;
 import git4idea.repo.GitRepository;
 import git4idea.repo.GitRepositoryManager;
 import gitflow.GitflowInitOptions;
+import gitflow.git.GitflowGitRepository;
 import gitflow.intellij.ProjectAndModules;
 import gitflow.test.TestUtils;
 import org.apache.commons.io.FileUtils;
@@ -28,20 +29,30 @@ public class TestFixture2 {
 
     public ProjectAndModules projectAndModules;
 
+    public GitflowGitRepository gitflowGitRepository;
+
+    // Fixture-Daten für das Hauptprojekt
     public Project project;
 
     public VirtualFile projectBaseDir;
 
+    public GitRepository projectGitRepository;
+
+    // Fixture-Daten für ein Modul im Projekt
     public Module module1;
 
     public VirtualFile module1ContentRoot;
 
+    public GitRepository module1GitRepository;
+
+    // Allgemeine Test-Daten
     public final String name;
 
     public JavaCodeInsightTestFixture myFixture;
 
     public final JavaCodeInsightFixtureTestCase javaCodeInsightFixtureTestCase;
 
+    // File-Handle auf die Remote Repositories für diese Test
     public File projectRepositoryRemoteRoot;
 
     public File moduleRepositoryRemoteRoot;
@@ -110,18 +121,19 @@ public class TestFixture2 {
         final GitRepositoryManager manager = GitUtil.getRepositoryManager(this.project);
         manager.directoryMappingChanged();
 
-        final GitRepository projectGitRepository = manager.getRepositoryForRoot(this.projectBaseDir);
-        final GitRepository module1GitRepository = manager.getRepositoryForRoot(this.module1ContentRoot);
+        this.projectGitRepository = manager.getRepositoryForRoot(this.projectBaseDir);
+        this.module1GitRepository = manager.getRepositoryForRoot(this.module1ContentRoot);
+
+        this.gitflowGitRepository = new GitflowGitRepository(this.projectAndModules);
+        this.gitflowGitRepository.addGitRepository(this.projectGitRepository);
+        this.gitflowGitRepository.addGitRepository(this.module1GitRepository);
 
         // Gitflow anschalten
         GitflowInitOptions gitflowInitOptions = new GitflowInitOptions();
         gitflowInitOptions.setUseDefaults(true);
 
-        TestUtils.enableGitflow(projectGitRepository, gitflowInitOptions);
-        TestUtils.enableGitflow(module1GitRepository, gitflowInitOptions);
-
-        TestUtils.startHotfix(projectGitRepository, "Test-Hotfix");
-        TestUtils.startHotfix(module1GitRepository, "Test-Hotfix");
+        TestUtils.enableGitflow(this.projectGitRepository, gitflowInitOptions);
+        TestUtils.enableGitflow(this.module1GitRepository, gitflowInitOptions);
 
         Field myFixtureField = JavaCodeInsightFixtureTestCase.class.getDeclaredField("myFixture");
         myFixtureField.setAccessible(true);

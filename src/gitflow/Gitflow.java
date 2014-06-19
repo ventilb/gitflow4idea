@@ -68,6 +68,10 @@ public interface Gitflow extends Git {
                                    @Nullable GitLineHandlerListener... listeners);
 
 
+    GitflowGitCommandResult publishRelease(@NotNull GitflowGitRepository repository,
+                                    @NotNull String releaseName,
+                                    @Nullable GitLineHandlerListener... listeners);
+
     GitCommandResult publishRelease(@NotNull GitRepository repository,
                                     @NotNull String releaseName,
                                     @Nullable GitLineHandlerListener... listeners);
