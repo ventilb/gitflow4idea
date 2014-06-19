@@ -26,15 +26,16 @@ public class InitRepoAction extends GitflowAction {
     }
 
     protected void showGitflowInitOptionsDialog() {
-        GitflowInitOptionsDialog optionsDialog = new GitflowInitOptionsDialog(myProject, branchUtil.getLocalBranchNames());
+        // TODO Nur die Branches holen, die in allen Git Repositories vorhanden sind
+        final GitflowInitOptionsDialog optionsDialog = new GitflowInitOptionsDialog(myProject, branchUtil.getLocalBranchNames());
         optionsDialog.show();
 
         if (optionsDialog.isOK()) {
-            final GitflowInitOptions initOptions = optionsDialog.getOptions();
 
             new Task.Backgroundable(this.myProject, "Initializing repo", false) {
                 @Override
                 public void run(@NotNull ProgressIndicator indicator) {
+                    final GitflowInitOptions initOptions = optionsDialog.getOptions();
                     performInitReposCommand(initOptions);
                 }
             }.queue();
@@ -45,7 +46,7 @@ public class InitRepoAction extends GitflowAction {
         final GitflowErrorsListener errorLineHandler = new GitflowErrorsListener(this.myProject);
         final GitflowInitRepoLineHandler localLineHandler = new GitflowInitRepoLineHandler ();
 
-        final GitflowGitCommandResult result = this.myGitflow.initRepos(this.gitflowGitRepository, initOptions);
+        final GitflowGitCommandResult result = this.myGitflow.initRepos(this.gitflowGitRepository, initOptions, errorLineHandler, localLineHandler);
 
         if (result.success()) {
             NotifyUtil.notifyGitflowWorkflowCommandSuccess(this.gitflowGitRepository, "Initialized the following gitflow repositories:");
