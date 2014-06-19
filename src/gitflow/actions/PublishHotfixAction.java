@@ -38,9 +38,9 @@ public class PublishHotfixAction extends GitflowAction {
     }
 
     protected boolean performPublishHotfixCommand(final String hotfixName) {
-        final GitflowErrorsListener errorLineHandler = new GitflowErrorsListener(myProject);
+        final GitflowErrorsListener errorLineHandler = new GitflowErrorsListener(this.myProject);
 
-        final GitflowGitCommandResult result = myGitflow.publishHotfix(this.gitflowGitRepository, hotfixName, errorLineHandler);
+        final GitflowGitCommandResult result = this.myGitflow.publishHotfix(this.gitflowGitRepository, hotfixName, errorLineHandler);
 
         final boolean publishHotfixCommandWasSuccessful = result.success();
 
