@@ -119,6 +119,33 @@ public class GitflowGitRepository {
         return distinctReleaseNames;
     }
 
+    /**
+     * Returns all unique feature names from all repositories.
+     * <p>
+     * Normally this method returns a set with only one element. It should not happen that the managed git repositories
+     * work on different features.
+     * </p>
+     * <p>
+     * The behaviour is unspecified if any of the repositories is not on a feature branch.
+     * </p>
+     *
+     * @return all unique feature names
+     */
+    public Set<String> getUniqueFeatureNamesFromCurrentBranches() {
+        final Set<String> distinctFeatureNames = new HashSet<String>();
+
+        String featureName;
+        String currentBranchName;
+        for (GitRepository gitRepository : gitRepositories()) {
+            currentBranchName = GitBranchUtil.getBranchNameOrRev(gitRepository);
+            featureName = GitflowConfigUtil.getFeatureNameFromBranch(gitRepository, currentBranchName);
+
+            distinctFeatureNames.add(featureName);
+        }
+
+        return distinctFeatureNames;
+    }
+
     public GitflowPerRepositoryReadConfig getGitflowPerRepositoryReadConfig() {
         if (this.gitflowPerRepositoryReadConfigInstance == null) {
             this.gitflowPerRepositoryReadConfigInstance = new GitflowPerRepositoryReadConfig(this);

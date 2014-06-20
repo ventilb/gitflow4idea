@@ -51,7 +51,7 @@ public class StartFeatureAction extends GitflowAction {
         if (startFeatureCommandWasSuccessful) {
             NotifyUtil.notifyGitflowFeatureCommandSuccess(this.gitflowGitRepository, "A new feature '%s' was created in the following git repositories:", featureName);
         } else {
-            NotifyUtil.notifyGitflowHotfixCommandFailed(this.gitflowGitRepository, "Starting a new feature '%s' resulted in an error in the following git repositories:", featureName, result);
+            NotifyUtil.notifyGitflowFeatureCommandFailed(this.gitflowGitRepository, "Starting a new feature '%s' resulted in an error in the following git repositories:", featureName, result);
         }
 
         this.gitflowGitRepository.update();

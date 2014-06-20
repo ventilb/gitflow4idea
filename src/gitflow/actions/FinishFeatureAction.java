@@ -3,82 +3,83 @@ package gitflow.actions;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
-import com.intellij.openapi.ui.Messages;
-import com.intellij.openapi.vcs.VcsException;
 import git4idea.branch.GitBranchUtil;
 import git4idea.commands.GitCommandResult;
-import git4idea.merge.GitMerger;
 import gitflow.GitflowConfigUtil;
+import gitflow.git.GitflowGitCommandResult;
+import gitflow.models.FinishFeatureResultCode;
+import gitflow.models.FinishReleaseResultCode;
 import gitflow.ui.NotifyUtil;
+import gitflow.ui.WorkflowUtil;
 import org.jetbrains.annotations.NotNull;
 
 public class FinishFeatureAction extends GitflowAction {
 
-    String customFeatureName=null;
-
     FinishFeatureAction() {
         super("Finish Feature");
-    }
-
-    FinishFeatureAction(String name) {
-        super("Finish Feature");
-        customFeatureName=name;
     }
 
     @Override
     public void actionPerformed(AnActionEvent e) {
         super.actionPerformed(e);
 
-        String currentBranchName = GitBranchUtil.getBranchNameOrRev(repo);
-        if (currentBranchName.isEmpty()==false){
-
-            final AnActionEvent event=e;
-            final String featureName;
-            // Check if a feature name was specified, otherwise take name from current branch
-            if (customFeatureName!=null){
-                featureName = customFeatureName;
-            }
-            else{
-                featureName = GitflowConfigUtil.getFeatureNameFromBranch(myProject, currentBranchName);
-            }
-            final GitflowErrorsListener errorLineHandler = new GitflowErrorsListener(myProject);
-
-            new Task.Backgroundable(myProject,"Finishing feature "+featureName,false){
-                @Override
-                public void run(@NotNull ProgressIndicator indicator) {
-                    GitCommandResult result =  myGitflow.finishFeature(repo,featureName,errorLineHandler);
-
-
-                    if (result.success()) {
-                        String finishedFeatureMessage = String.format("The feature branch '%s%s' was merged into '%s'", featurePrefix, featureName, developBranch);
-                        NotifyUtil.notifySuccess(myProject, featureName, finishedFeatureMessage);
-                    }
-                    else if(errorLineHandler.hasMergeError){
-                        // (merge errors are handled in the onSuccess handler)
-                    }
-                    else {
-                        NotifyUtil.notifyError(myProject, "Error", "Please have a look at the Version Control console for more details");
-                    }
-
-                }
-
-                @Override
-                public void onSuccess() {
-                    super.onSuccess();
-
-	                //merge conflicts if necessary
-	                if (errorLineHandler.hasMergeError){
-		                if (handleMerge()){
-			                FinishFeatureAction completeFinishFeatureAction = new FinishFeatureAction(featureName);
-			                completeFinishFeatureAction.actionPerformed(event);
-		                }
-
-	                }
-
-                }
-            }.queue();
+        if (WorkflowUtil.areAllGitRepositoriesOnSameAndValidBranchOrNotify(this.gitflowGitRepository)) {
+            prepareFinishFeatureCommand();
         }
+    }
 
+    protected void prepareFinishFeatureCommand() {
+        final String featureName = WorkflowUtil.getUniqueFeatureNameOrNotify(this.gitflowGitRepository);
+
+        performFinishFeatureActionInBackground(featureName);
+    }
+
+    protected void performFinishFeatureActionInBackground(final String featureName) {
+        new Task.Backgroundable(this.myProject, "Finishing feature " + featureName, false) {
+
+            private FinishFeatureResultCode finishFeatureResultCode;
+
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                this.finishFeatureResultCode = performFinishFeatureCommand(featureName);
+            }
+
+            @Override
+            public void onSuccess() {
+                super.onSuccess();
+
+                //merge conflicts if necessary
+                mergeBranchesIfMergeConflictOccured(this.finishFeatureResultCode, featureName);
+            }
+        }.queue();
+    }
+
+    protected FinishFeatureResultCode performFinishFeatureCommand(final String featureName) {
+        final GitflowErrorsListener errorLineHandler = new GitflowErrorsListener(this.myProject);
+
+        final GitflowGitCommandResult result = this.myGitflow.finishFeature(this.gitflowGitRepository, featureName, errorLineHandler);
+
+        if (result.success()) {
+            NotifyUtil.notifyGitflowFeatureCommandSuccess(this.gitflowGitRepository, "The feature '%s' was merged into the following git repositories:", featureName);
+            return FinishFeatureResultCode.SUCCESS;
+        } else if (errorLineHandler.hasMergeError) {
+            // (merge errors are handled in the onSuccess handler)
+            return FinishFeatureResultCode.MERGE_CONFLICT;
+        } else {
+            NotifyUtil.notifyGitflowFeatureCommandFailed(this.gitflowGitRepository, "Finishing the feature '%s' resulted in an error in the following git repositories:", featureName, result);
+            return FinishFeatureResultCode.FAILED;
+        }
+    }
+
+    protected void mergeBranchesIfMergeConflictOccured(final FinishFeatureResultCode finishFeatureResultCode, final String featureName) {
+        if (finishFeatureResultCode == FinishFeatureResultCode.MERGE_CONFLICT) {
+
+            final boolean mergeOfAllBranchesAndRepositoriesWasSuccessful = this.myGitflow.mergeBranches(this.gitflowGitRepository);
+
+            if (mergeOfAllBranchesAndRepositoriesWasSuccessful) {
+                performFinishFeatureActionInBackground(featureName);
+            }
+        }
     }
 
 }

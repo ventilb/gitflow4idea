@@ -130,6 +130,13 @@ public class TestUtils {
         assertThat(gitCommandResult.success(), is(true));
     }
 
+    public static void startFeature(final GitRepository gitRepository, final String featureName) {
+        final Gitflow gitflow = ServiceManager.getService(Gitflow.class);
+        final GitCommandResult gitCommandResult = gitflow.startFeature(gitRepository, featureName);
+
+        assertThat(gitCommandResult.success(), is(true));
+    }
+
     // Git command helpers ////////////////////////////////////////////////////
 
     public static String listGitConfig(final VirtualFile repositoryRoot) throws IOException {

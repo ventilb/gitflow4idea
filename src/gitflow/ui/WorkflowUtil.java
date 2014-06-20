@@ -73,6 +73,19 @@ public class WorkflowUtil {
         return uniqueReleaseNames.iterator().next();
     }
 
+    public static String getUniqueFeatureNameOrNotify(@NotNull GitflowGitRepository gitflowGitRepository) {
+        final Project project = gitflowGitRepository.getProject();
+
+        final Set<String> uniqueFeatureNames = gitflowGitRepository.getUniqueFeatureNamesFromCurrentBranches();
+
+        if (uniqueFeatureNames.size() != 1) {
+            NotifyUtil.notifyError(project, "Error", "The tracked git repositories have different releases.");
+            return null;
+        }
+
+        return uniqueFeatureNames.iterator().next();
+    }
+
     public static boolean areAllGitRepositoriesOnSameAndValidBranchOrNotify(@NotNull final GitflowGitRepository gitflowGitRepository) {
         final Project project = gitflowGitRepository.getProject();
 

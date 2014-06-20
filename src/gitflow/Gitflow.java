@@ -32,6 +32,10 @@ public interface Gitflow extends Git {
                                   @NotNull String featureName,
                                   @Nullable GitLineHandlerListener... listeners);
 
+    GitflowGitCommandResult finishFeature(@NotNull GitflowGitRepository repository,
+                                   @NotNull String featureName,
+                                   @Nullable GitLineHandlerListener... listeners);
+
     GitCommandResult finishFeature(@NotNull GitRepository repository,
                                    @NotNull String featureName,
                                    @Nullable GitLineHandlerListener... listeners);

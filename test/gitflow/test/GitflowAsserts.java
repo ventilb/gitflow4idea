@@ -24,14 +24,22 @@ import static org.hamcrest.Matchers.*;
 public class GitflowAsserts {
 
     public static void assertFileContentInDefaultGitflowBranches(final GitRepository gitRepository, final File fileToTest, final String expectedFileContent) throws Exception {
-        TestUtils.switchBranch(gitRepository, GitflowConfigUtil.DEFAULT_BRANCH_MASTER);
-        final String actualFileContentInProductionBranch = FileUtils.readFileToString(fileToTest);
+        assertFileContentInDevelopmentBranch(gitRepository, fileToTest, expectedFileContent);
+        assertFileContentInProductionBranch(gitRepository, fileToTest, expectedFileContent);
+    }
 
+    public static void assertFileContentInDevelopmentBranch(final GitRepository gitRepository, final File fileToTest, final String expectedFileContent) throws Exception {
         TestUtils.switchBranch(gitRepository, GitflowConfigUtil.DEFAULT_BRANCH_DEVELOP);
         final String actualFileContentInDevelopBranch = FileUtils.readFileToString(fileToTest);
 
-        assertThat(actualFileContentInProductionBranch, is(expectedFileContent));
         assertThat(actualFileContentInDevelopBranch, is(expectedFileContent));
+    }
+
+    public static void assertFileContentInProductionBranch(final GitRepository gitRepository, final File fileToTest, final String expectedFileContent) throws Exception {
+        TestUtils.switchBranch(gitRepository, GitflowConfigUtil.DEFAULT_BRANCH_MASTER);
+        final String actualFileContentInProductionBranch = FileUtils.readFileToString(fileToTest);
+
+        assertThat(actualFileContentInProductionBranch, is(expectedFileContent));
     }
 
     public static void assertDefaultCurrentHotfixBranchName(final GitRepository gitRepository, final String hotfixName) throws Exception {
@@ -92,7 +100,7 @@ public class GitflowAsserts {
         assertThat(actualGitflowDevelopmentBranchName, is(expectedGiflowDevelopmentBranchName));
     }
 
-    public static void assertBranchNames(final File repositoryRoot, final String ...expectedBranchNames) throws Exception {
+    public static void assertBranchNames(final File repositoryRoot, final String... expectedBranchNames) throws Exception {
         final String[] branchNames = TestUtils.listLocalBranchNames(repositoryRoot);
 
         assertThat(Arrays.asList(branchNames), containsInAnyOrder(expectedBranchNames));
