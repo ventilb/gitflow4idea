@@ -48,6 +48,12 @@ public class HtmlFragmentNotificationBuilder implements NotificationMessageBuild
     }
 
     @Override
+    public NotificationMessageBuilder addFeatureBranchAndRepositoryName(@NotNull RepositoryConfig repositoryConfig, String releaseName) {
+        this.notificationBuffer.append(PrettyFormat.featureBranchAndRepositoryName(repositoryConfig, releaseName));
+        return this;
+    }
+
+    @Override
     public NotificationMessageBuilder newLine() {
         this.notificationBuffer.append("<br/>");
         return this;

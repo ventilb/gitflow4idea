@@ -3,8 +3,6 @@ package gitflow.ui.notifications;
 import gitflow.git.RepositoryConfig;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-
 /**
  * Specifies an interface which can be implemented to create notification message builders for certain use cases. This
  * interface is meant to abstract from the concrete output. In example current implementations can build notification
@@ -23,6 +21,8 @@ public interface NotificationMessageBuilder {
     public NotificationMessageBuilder addHotfixBranchAndRepositoryName(@NotNull RepositoryConfig repositoryConfig, String hotfixName);
 
     public NotificationMessageBuilder addReleaseBranchAndRepositoryName(@NotNull RepositoryConfig repositoryConfig, String releaseName);
+
+    public NotificationMessageBuilder addFeatureBranchAndRepositoryName(@NotNull RepositoryConfig repositoryConfig, String releaseName);
 
     public NotificationMessageBuilder newLine();
 

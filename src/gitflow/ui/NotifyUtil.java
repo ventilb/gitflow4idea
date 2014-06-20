@@ -152,6 +152,33 @@ public class NotifyUtil {
     }
 
     /**
+     * Notifies the user that a gitflow workflow was successful. The {@code messageIntro} parameter should state which
+     * gitflow command was successful. The string must contain a replacement parameter %s which will be replaced by
+     * the {@code workflowUserInputValue} value such as a branch name.
+     *
+     * @param gitflowGitRepository   the gitflow git repository
+     * @param messageIntro           the message intro
+     * @param workflowUserInputValue the workflow user input name
+     */
+    public static void notifyGitflowFeatureCommandSuccess(@NotNull final GitflowGitRepository gitflowGitRepository, @NotNull final String messageIntro, @NotNull final String workflowUserInputValue) {
+        final Project project = gitflowGitRepository.getProject();
+        final GitflowPerRepositoryReadConfig gitflowPerRepositoryReadConfig = gitflowGitRepository.getGitflowPerRepositoryReadConfig();
+
+        final HtmlFragmentNotificationBuilder notificationBuilder = new HtmlFragmentNotificationBuilder();
+        notificationBuilder.addMessage(messageIntro, workflowUserInputValue)
+                .startUnorderedList()
+                .forEach(gitflowPerRepositoryReadConfig.repositoryConfigs(), new NotificationMessageForEachBuilder<RepositoryConfig>() {
+                    @Override
+                    public void forEachItem(RepositoryConfig repositoryConfig, NotificationMessageBuilder notificationMessageBuilder) {
+                        notificationMessageBuilder.startListItem().addFeatureBranchAndRepositoryName(repositoryConfig, workflowUserInputValue).endListItem();
+                    }
+                })
+                .endUnorderedList();
+
+        NotifyUtil.notifySuccess(project, workflowUserInputValue, notificationBuilder.toString());
+    }
+
+    /**
      * Notifies the user that a gitflow workflow has failed. The {@code messageIntro} parameter should state which
      * gitflow command failed. The string must contain a replacement parameter %s which will be replaced by
      * the {@code workflowUserInputValue} value such as a branch name.
@@ -212,4 +239,36 @@ public class NotifyUtil {
 
         NotifyUtil.notifyError(project, "Error", notificationBuilder.toString());
     }
+
+    /**
+     * Notifies the user that a gitflow workflow has failed. The {@code messageIntro} parameter should state which
+     * gitflow command failed. The string must contain a replacement parameter %s which will be replaced by
+     * the {@code workflowUserInputValue} value such as a branch name.
+     *
+     * @param gitflowGitRepository   the gitflow git repository
+     * @param messageIntro           the message intro
+     * @param workflowUserInputValue the workflow user input name
+     * @param result                 the gitflow command result object
+     */
+    public static void notifyGitflowFeatureCommandFailed(@NotNull final GitflowGitRepository gitflowGitRepository, @NotNull final String messageIntro, @NotNull final String workflowUserInputValue, @NotNull final GitflowGitCommandResult result) {
+        final Project project = gitflowGitRepository.getProject();
+        final GitflowPerRepositoryReadConfig gitflowPerRepositoryReadConfig = gitflowGitRepository.getGitflowPerRepositoryReadConfig();
+
+        final GitRepository[] failedGitRepositories = result.getFailedGitRepositories();
+
+        final HtmlFragmentNotificationBuilder notificationBuilder = new HtmlFragmentNotificationBuilder();
+        notificationBuilder.addMessage(messageIntro, workflowUserInputValue)
+                .startUnorderedList()
+                .forEach(gitflowPerRepositoryReadConfig.repositoryConfigs(failedGitRepositories), new NotificationMessageForEachBuilder<RepositoryConfig>() {
+                    @Override
+                    public void forEachItem(RepositoryConfig repositoryConfig, NotificationMessageBuilder notificationMessageBuilder) {
+                        notificationMessageBuilder.startListItem().addFeatureBranchAndRepositoryName(repositoryConfig, workflowUserInputValue).endListItem();
+                    }
+                })
+                .endUnorderedList()
+                .addMessage("Please also have a look at the Version Control console for more details.");
+
+        NotifyUtil.notifyError(project, "Error", notificationBuilder.toString());
+    }
+
 }

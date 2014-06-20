@@ -138,6 +138,19 @@ public class GitflowImpl extends GitImpl implements Gitflow {
 
     //feature
 
+    @Override
+    public GitflowGitCommandResult startFeature(@NotNull GitflowGitRepository gitflowGitRepository, @NotNull String featureName, @Nullable GitLineHandlerListener... listeners) {
+        final GitflowGitCommandResult gitflowGitCommandResult = new GitflowGitCommandResult();
+
+        GitCommandResult gitCommandResult;
+        for (GitRepository gitRepository : gitflowGitRepository.gitRepositories()) {
+            gitCommandResult = startFeature(gitRepository, featureName, listeners);
+            gitflowGitCommandResult.setGitCommandResultForGitRepository(gitRepository, gitCommandResult);
+        }
+
+        return gitflowGitCommandResult;
+    }
+
     public GitCommandResult startFeature(@NotNull GitRepository repository,
                                          @NotNull String featureName,
                                          @Nullable GitLineHandlerListener... listeners) {
