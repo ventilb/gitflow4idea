@@ -66,7 +66,6 @@ public class FinishHotfixActionTest extends JavaCodeInsightFixtureTestCase {
         // Test durchführen
         final FinishHotfixAction finishHotfixAction = new FinishHotfixAction();
         finishHotfixAction.setProject(this.testFixture1.project);
-        finishHotfixAction.setVirtualFileMananger(VirtualFileManager.getInstance());
         finishHotfixAction.setBranchUtil(new GitflowBranchUtil(this.testFixture1.project));
         finishHotfixAction.setGitflowGitRepository(gitflowGitRepository);
 

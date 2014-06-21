@@ -61,7 +61,6 @@ public class InitRepoActionTest extends JavaCodeInsightFixtureTestCase {
         // Test durchführen
         InitRepoAction initRepoAction = new InitRepoAction();
         initRepoAction.setProject(this.testFixture1.project);
-        initRepoAction.setVirtualFileMananger(VirtualFileManager.getInstance());
         initRepoAction.setBranchUtil(new GitflowBranchUtil(this.testFixture1.project));
         initRepoAction.setGitflowGitRepository(gitflowGitRepository);
 

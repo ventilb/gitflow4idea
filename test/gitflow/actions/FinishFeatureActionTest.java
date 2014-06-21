@@ -66,7 +66,6 @@ public class FinishFeatureActionTest extends JavaCodeInsightFixtureTestCase {
         // Test durchführen
         final FinishFeatureAction finishFeatureAction = new FinishFeatureAction();
         finishFeatureAction.setProject(this.testFixture1.project);
-        finishFeatureAction.setVirtualFileMananger(VirtualFileManager.getInstance());
         finishFeatureAction.setBranchUtil(new GitflowBranchUtil(this.testFixture1.project));
         finishFeatureAction.setGitflowGitRepository(gitflowGitRepository);
 

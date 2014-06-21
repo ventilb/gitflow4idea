@@ -29,7 +29,6 @@ public class PublishHotfixActionTest extends JavaCodeInsightFixtureTestCase {
         // Test durchführen
         final PublishHotfixAction publishHotfixAction = new PublishHotfixAction();
         publishHotfixAction.setProject(this.testFixture2.project);
-        publishHotfixAction.setVirtualFileMananger(VirtualFileManager.getInstance());
         publishHotfixAction.setBranchUtil(new GitflowBranchUtil(this.testFixture2.project));
         publishHotfixAction.setGitflowGitRepository(this.testFixture2.gitflowGitRepository);
 

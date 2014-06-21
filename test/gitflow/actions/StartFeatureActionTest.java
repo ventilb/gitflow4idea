@@ -42,7 +42,6 @@ public class StartFeatureActionTest extends JavaCodeInsightFixtureTestCase {
         // Test durchführen
         final StartFeatureAction startFeatureAction = new StartFeatureAction();
         startFeatureAction.setProject(this.testFixture1.project);
-        startFeatureAction.setVirtualFileMananger(VirtualFileManager.getInstance());
         startFeatureAction.setBranchUtil(new GitflowBranchUtil(this.testFixture1.project));
         startFeatureAction.setGitflowGitRepository(gitflowGitRepository);
 

@@ -62,7 +62,6 @@ public class FinishReleaseActionTest extends JavaCodeInsightFixtureTestCase {
         // Test durchführen
         FinishReleaseAction finishReleaseAction = new FinishReleaseAction();
         finishReleaseAction.setProject(this.testFixture1.project);
-        finishReleaseAction.setVirtualFileMananger(VirtualFileManager.getInstance());
         finishReleaseAction.setBranchUtil(new GitflowBranchUtil(this.testFixture1.project));
         finishReleaseAction.setGitflowGitRepository(gitflowGitRepository);
 
