@@ -3,8 +3,6 @@ package gitflow.actions;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
-import git4idea.commands.GitCommandResult;
-import gitflow.GitflowConfigUtil;
 import gitflow.git.GitflowGitCommandResult;
 import gitflow.ui.NotifyUtil;
 import gitflow.ui.WorkflowUtil;
@@ -20,11 +18,11 @@ public class PublishHotfixAction extends GitflowAction {
         super.actionPerformed(anActionEvent);
 
         if (WorkflowUtil.areAllGitRepositoriesOnSameAndValidBranchOrNotify(this.gitflowGitRepository)) {
-            performAsyncPublishHotfixAction();
+            performPublishHotfixActionInBackground();
         }
     }
 
-    protected void performAsyncPublishHotfixAction() {
+    protected void performPublishHotfixActionInBackground() {
         final String hotfixName = WorkflowUtil.getUniqueHotfixNameOrNotify(this.gitflowGitRepository);
 
         if (hotfixName != null) {
