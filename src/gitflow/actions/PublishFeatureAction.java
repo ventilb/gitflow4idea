@@ -3,13 +3,13 @@ package gitflow.actions;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
-import git4idea.commands.GitCommandResult;
-import gitflow.GitflowConfigUtil;
+import gitflow.git.GitflowGitCommandResult;
 import gitflow.ui.NotifyUtil;
+import gitflow.ui.WorkflowUtil;
 import org.jetbrains.annotations.NotNull;
 
 public class PublishFeatureAction extends GitflowAction {
-    PublishFeatureAction(){
+    PublishFeatureAction() {
         super("Publish Feature");
     }
 
@@ -17,26 +17,39 @@ public class PublishFeatureAction extends GitflowAction {
     public void actionPerformed(AnActionEvent anActionEvent) {
         super.actionPerformed(anActionEvent);
 
-        final String featureName= GitflowConfigUtil.getFeatureNameFromBranch(myProject, currentBranchName);
+        if (WorkflowUtil.areAllGitRepositoriesOnSameAndValidBranchOrNotify(this.gitflowGitRepository)) {
+            performPublishFeatureActionInBackground();
+        }
+    }
 
-        new Task.Backgroundable(myProject,"Publishing feature "+featureName,false){
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
-                GitCommandResult result = myGitflow.publishFeature(repo,featureName,new GitflowErrorsListener(myProject));
+    protected void performPublishFeatureActionInBackground() {
+        final String featureName = WorkflowUtil.getUniqueFeatureNameOrNotify(this.gitflowGitRepository);
 
-                if (result.success()) {
-                    String publishedFeatureMessage = String.format("A new remote branch '%s%s' was created", featurePrefix, featureName);
-                    NotifyUtil.notifySuccess(myProject, featureName, publishedFeatureMessage);
+        if (featureName != null) {
+            new Task.Backgroundable(this.myProject, "Publishing feature " + featureName, false) {
+                @Override
+                public void run(@NotNull ProgressIndicator indicator) {
+                    performPublishFeatureAction(featureName);
                 }
-                else {
-                    NotifyUtil.notifyError(myProject, "Error", "Please have a look at the Version Control console for more details");
-                }
+            }.queue();
+        }
+    }
 
-                repo.update();
+    protected boolean performPublishFeatureAction(final String featureName) {
+        final GitflowErrorsListener errorLineHandler = new GitflowErrorsListener(this.myProject);
 
+        final GitflowGitCommandResult result = this.myGitflow.publishFeature(this.gitflowGitRepository, featureName, errorLineHandler);
 
-            }
-        }.queue();
+        final boolean publishFeatureCommandWasSuccessful = result.success();
 
+        if (publishFeatureCommandWasSuccessful) {
+            NotifyUtil.notifyGitflowHotfixCommandSuccess(this.gitflowGitRepository, "The feature '%s' was published to the remote branches:", featureName);
+        } else {
+            NotifyUtil.notifyGitflowHotfixCommandFailed(this.gitflowGitRepository, "Publishing the feature '%s' to the remote branches failed for the remote branches:", featureName, result);
+        }
+
+        this.gitflowGitRepository.update();
+
+        return publishFeatureCommandWasSuccessful;
     }
 }

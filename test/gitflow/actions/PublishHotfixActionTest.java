@@ -2,14 +2,9 @@ package gitflow.actions;
 
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.testFramework.fixtures.JavaCodeInsightFixtureTestCase;
-import git4idea.GitUtil;
-import git4idea.repo.GitRepository;
-import git4idea.repo.GitRepositoryManager;
 import gitflow.GitflowBranchUtil;
 import gitflow.GitflowConfigUtil;
-import gitflow.GitflowInitOptions;
 import gitflow.fixtures.TestFixture2;
-import gitflow.git.GitflowGitRepository;
 import gitflow.test.GitflowAsserts;
 import gitflow.test.TestUtils;
 import org.junit.Test;
@@ -53,15 +48,10 @@ public class PublishHotfixActionTest extends JavaCodeInsightFixtureTestCase {
 
     private TestFixture2 testFixture2;
 
-    private GitflowInitOptions gitflowInitOptions;
-
     @Override
     public void setUp() throws Exception {
         this.testFixture2 = new TestFixture2(this);
         this.testFixture2.setUp();
-
-        this.gitflowInitOptions = new GitflowInitOptions();
-        this.gitflowInitOptions.setUseDefaults(true);
     }
 
     @Override
