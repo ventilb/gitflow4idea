@@ -21,12 +21,10 @@ public class FinishHotfixAction_OneRepository_Test extends JavaCodeInsightFixtur
     @Test
     public void testPerformFinishHotfixCommand_with_no_file_change() throws Exception {
         // Testfix erstellen
-        TestUtils.startHotfix(this.testFixture3.projectGitRepository, "Test-Hotfix");
 
         // Test durchführen
         final FinishHotfixAction finishHotfixAction = new FinishHotfixAction();
         finishHotfixAction.setProject(this.testFixture3.project);
-        finishHotfixAction.setBranchUtil(new GitflowBranchUtil(this.testFixture3.project));
         finishHotfixAction.setGitflowGitRepository(this.testFixture3.gitflowGitRepository);
 
         final boolean finishHotfixCommandWasSuccessful = finishHotfixAction.performFinishHotfixCommand("Test-Hotfix", "* Finished hotfix");
@@ -39,8 +37,6 @@ public class FinishHotfixAction_OneRepository_Test extends JavaCodeInsightFixtur
     @Test
     public void testPerformFinishHotfixCommand_a_file_has_changed() throws Exception {
         // Testfix erstellen
-        TestUtils.startHotfix(this.testFixture3.projectGitRepository, "Test-Hotfix");
-
         TestUtils.changeFileContentTo(this.testFixture3.projectTestFile, "The project test file has changed");
 
         TestUtils.commit(this.testFixture3.projectGitRepository, "* The testfile has changed");
@@ -48,7 +44,6 @@ public class FinishHotfixAction_OneRepository_Test extends JavaCodeInsightFixtur
         // Test durchführen
         final FinishHotfixAction finishHotfixAction = new FinishHotfixAction();
         finishHotfixAction.setProject(this.testFixture3.project);
-        finishHotfixAction.setBranchUtil(new GitflowBranchUtil(this.testFixture3.project));
         finishHotfixAction.setGitflowGitRepository(this.testFixture3.gitflowGitRepository);
 
         final boolean finishHotfixCommandWasSuccessful = finishHotfixAction.performFinishHotfixCommand("Test-Hotfix", "* Finished hotfix");
@@ -66,6 +61,9 @@ public class FinishHotfixAction_OneRepository_Test extends JavaCodeInsightFixtur
     public void setUp() throws Exception {
         this.testFixture3 = new TestFixture3(this);
         this.testFixture3.setUp();
+
+        TestUtils.startHotfix(this.testFixture3.projectGitRepository, "Test-Hotfix");
+        GitflowAsserts.assertDefaultCurrentHotfixBranchName(this.testFixture3.projectGitRepository, "Test-Hotfix");
     }
 
     @Override

@@ -17,6 +17,7 @@ import com.intellij.testFramework.fixtures.TestFixtureBuilder;
 import git4idea.GitUtil;
 import git4idea.commands.GitCommandResult;
 import git4idea.repo.GitRepository;
+import git4idea.repo.GitRepositoryManager;
 import gitflow.Gitflow;
 import gitflow.GitflowInitOptions;
 import org.apache.commons.io.FileUtils;
@@ -113,12 +114,20 @@ public class TestUtils {
         final Gitflow gitflow = ServiceManager.getService(Gitflow.class);
         final GitCommandResult gitCommandResult = gitflow.initRepo(gitRepository, gitflowInitOptions);
 
+        // Sync file system state with intellij's virtual file system. Otherwise the changes might not be visible.
+        syncFileSystem();
+        syncProjectRepositories(gitRepository.getProject());
+
         assertThat(gitCommandResult.success(), is(true));
     }
 
     public static void startHotfix(final GitRepository gitRepository, final String hotfixName) {
         final Gitflow gitflow = ServiceManager.getService(Gitflow.class);
         final GitCommandResult gitCommandResult = gitflow.startHotfix(gitRepository, hotfixName);
+
+        // Sync file system state with intellij's virtual file system. Otherwise the changes might not be visible.
+        syncFileSystem();
+        syncProjectRepositories(gitRepository.getProject());
 
         assertThat(gitCommandResult.success(), is(true));
     }
@@ -127,12 +136,20 @@ public class TestUtils {
         final Gitflow gitflow = ServiceManager.getService(Gitflow.class);
         final GitCommandResult gitCommandResult = gitflow.startRelease(gitRepository, releaseName);
 
+        // Sync file system state with intellij's virtual file system. Otherwise the changes might not be visible.
+        syncFileSystem();
+        syncProjectRepositories(gitRepository.getProject());
+
         assertThat(gitCommandResult.success(), is(true));
     }
 
     public static void startFeature(final GitRepository gitRepository, final String featureName) {
         final Gitflow gitflow = ServiceManager.getService(Gitflow.class);
         final GitCommandResult gitCommandResult = gitflow.startFeature(gitRepository, featureName);
+
+        // Sync file system state with intellij's virtual file system. Otherwise the changes might not be visible.
+        syncFileSystem();
+        syncProjectRepositories(gitRepository.getProject());
 
         assertThat(gitCommandResult.success(), is(true));
     }
@@ -483,5 +500,8 @@ public class TestUtils {
         }
     }
 
-
+    public static void syncProjectRepositories(final Project project) {
+        final GitRepositoryManager manager = GitUtil.getRepositoryManager(project);
+        manager.directoryMappingChanged();
+    }
 }

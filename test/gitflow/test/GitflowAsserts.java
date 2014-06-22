@@ -51,9 +51,9 @@ public class GitflowAsserts {
 
     public static void assertDefaultCurrentReleaseBranchName(final GitRepository gitRepository, final String releaseName) throws Exception {
         final GitLocalBranch currentBranch = gitRepository.getCurrentBranch();
-        final String expectedHotfixBranchName = GitflowConfigUtil.DEFAULT_PREFIX_RELEASE + releaseName;
+        final String expectedReleaseBranchName = GitflowConfigUtil.DEFAULT_PREFIX_RELEASE + releaseName;
 
-        assertThat(currentBranch.getName(), is(expectedHotfixBranchName));
+        assertThat(currentBranch.getName(), is(expectedReleaseBranchName));
     }
 
     public static void assertDefaultCurrentFeatureBranchName(final GitRepository gitRepository, final String featureName) throws Exception {
