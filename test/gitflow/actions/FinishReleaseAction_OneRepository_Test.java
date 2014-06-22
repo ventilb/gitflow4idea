@@ -17,7 +17,7 @@ import static org.junit.Assert.*;
  * Implements a test case to test the {@link gitflow.actions.FinishReleaseAction} implementation.
  *
  * @author <a href="mailto:manuel_schulze@i-entwicklung.de">Manuel Schulze</a>
- * @since 09.06.14 - 22:43
+ * @since 22.06.14 - 23:54
  */
 public class FinishReleaseAction_OneRepository_Test extends JavaCodeInsightFixtureTestCase {
 

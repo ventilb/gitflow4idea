@@ -25,7 +25,7 @@ import static org.junit.Assert.assertThat;
  * @author <a href="mailto:manuel_schulze@i-entwicklung.de">Manuel Schulze</a>
  * @since 14.06.14 - 23:11
  */
-public class FinishReleaseActionTest extends JavaCodeInsightFixtureTestCase {
+public class FinishReleaseAction_TwoRepositories_Test extends JavaCodeInsightFixtureTestCase {
 
     @Test
     public void testPerformFinishReleaseCommand() throws Exception {
