@@ -66,7 +66,6 @@ public class FinishFeatureAction_TwoRepositories_Test extends JavaCodeInsightFix
         // Test durchführen
         final FinishFeatureAction finishFeatureAction = new FinishFeatureAction();
         finishFeatureAction.setProject(this.testFixture1.project);
-        finishFeatureAction.setBranchUtil(new GitflowBranchUtil(this.testFixture1.project));
         finishFeatureAction.setGitflowGitRepository(gitflowGitRepository);
 
         final FinishFeatureResultCode finishFeatureResultCode = finishFeatureAction.performFinishFeatureCommand("Test-Feature");
