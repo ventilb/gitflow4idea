@@ -1,12 +1,10 @@
 package gitflow.actions;
 
-import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.testFramework.fixtures.JavaCodeInsightFixtureTestCase;
 import git4idea.GitUtil;
 import git4idea.repo.GitRepository;
 import git4idea.repo.GitRepositoryManager;
 import gitflow.GitflowBranchUtil;
-import gitflow.GitflowConfigUtil;
 import gitflow.GitflowInitOptions;
 import gitflow.fixtures.TestFixture1;
 import gitflow.git.GitflowGitRepository;
@@ -15,8 +13,8 @@ import gitflow.test.TestUtils;
 
 import java.io.File;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
 /**
  * Implements a test case to test the {@link gitflow.actions.FinishHotfixAction} implementation.
@@ -24,7 +22,7 @@ import static org.junit.Assert.*;
  * @author <a href="mailto:manuel_schulze@i-entwicklung.de">Manuel Schulze</a>
  * @since 09.06.14 - 22:43
  */
-public class FinishHotfixActionTest extends JavaCodeInsightFixtureTestCase {
+public class FinishHotfixAction_TwoRepositories_Test extends JavaCodeInsightFixtureTestCase {
 
     public void testPerformFinishHotfixCommand() throws Exception {
         // Testfix erstellen
@@ -52,12 +50,6 @@ public class FinishHotfixActionTest extends JavaCodeInsightFixtureTestCase {
 
         TestUtils.commit(projectGitRepository.getRoot(), "* The testfile has changed");
         TestUtils.commit(module1GitRepository.getRoot(), "* The testfile has changed");
-
-        /*
-        Zurück in den Develop-Branch wechseln, da gitflow sonst den Hotfix nicht abschließen kann
-         */
-        TestUtils.switchBranch(projectGitRepository, GitflowConfigUtil.DEFAULT_BRANCH_DEVELOP);
-        TestUtils.switchBranch(module1GitRepository, GitflowConfigUtil.DEFAULT_BRANCH_DEVELOP);
 
         final GitflowGitRepository gitflowGitRepository = new GitflowGitRepository(this.testFixture1.projectAndModules);
         gitflowGitRepository.addGitRepository(projectGitRepository);

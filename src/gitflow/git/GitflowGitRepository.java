@@ -1,7 +1,11 @@
 package gitflow.git;
 
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
+import git4idea.GitLocalBranch;
+import git4idea.GitRemoteBranch;
 import git4idea.branch.GitBranchUtil;
+import git4idea.branch.GitBrancher;
 import git4idea.repo.GitRepository;
 import gitflow.GitflowConfigUtil;
 import gitflow.intellij.ProjectAndModules;
@@ -40,22 +44,53 @@ public class GitflowGitRepository {
     }
 
     /**
+     * Switches all repositories to their configured development branch. Returns TRUE if all repositories are on the
+     * same branch after the switch, FALSE otherwise.
+     *
+     * @return TRUE if all repositories are on the same branch or FALSE
+     */
+    public boolean switchToDevelopmentBranch() {
+        final GitBrancher brancher = ServiceManager.getService(this.projectAndModules.getProject(), GitBrancher.class);
+        for (GitRepository gitRepository : gitRepositories()) {
+            brancher.checkout(GitflowConfigUtil.getDevelopBranch(gitRepository), Collections.singletonList(gitRepository), null);
+        }
+        return areAllGitRepositoriesOnSameAndValidBranch();
+    }
+
+    /**
      * Returns TRUE if all git repositories have checked out the same and valid branch, FALSE otherwise.
      * <p>
-     * A branch is considered not valid if its name is empty. This may happen if a git repository is checked out to a
-     * specific commit instead of a branch.
+     * A branch is considered not valid if:
      * </p>
+     * <ul>
+     * <li>Rebasing is in progress for at least one repository,</li>
+     * <li>One repository is not on any branch,</li>
+     * <li>For an unknown reason the branch name is empty or NULL.</li>
+     * </ul>
      *
      * @return TRUE if all git repositories have checked out the same and valid branch, FALSE otherwise
      */
     public boolean areAllGitRepositoriesOnSameAndValidBranch() {
         final Set<String> gitRepositoryBranchNames = new HashSet<String>();
 
+        GitLocalBranch gitLocalBranch;
         String branchName;
         for (GitRepository gitRepository : gitRepositories()) {
-            branchName = GitBranchUtil.getBranchNameOrRev(gitRepository);
+            if (gitRepository.isRebaseInProgress()) {
+                // Rebasing in progress
+                return false;
+            }
 
-            if (branchName.isEmpty()) {
+            gitLocalBranch = gitRepository.getCurrentBranch();
+            if (gitLocalBranch == null) {
+                // We are not on any branch
+                return false;
+            }
+
+            branchName = gitLocalBranch.getName();
+
+            if (branchName == null || branchName.isEmpty()) {
+                // Branch name is empty
                 return false;
             }
 

@@ -298,6 +298,11 @@ public class TestUtils {
         syncFileSystem();
     }
 
+    public static void commit(final GitRepository gitRepository, final String oneLineCommitMessage) throws IOException {
+        final VirtualFile repositoryRoot = gitRepository.getRoot();
+        commit(repositoryRoot, oneLineCommitMessage);
+    }
+
     public static void commit(final String repositoryRoot, final String oneLineCommitMessage) throws IOException {
         performConsoleGitCommand(repositoryRoot, "commit", "-a", "-m", oneLineCommitMessage);
     }

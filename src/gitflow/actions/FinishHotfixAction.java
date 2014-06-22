@@ -46,6 +46,15 @@ public class FinishHotfixAction extends GitflowAction {
     }
 
     protected boolean performFinishHotfixCommand(final String hotfixName, final String tagMessage) {
+        /*
+        We must switch to the development branch before finish hotfix because git fails for for hotfix branches if no
+        commit occured. In a multi module repository this can happen often because you don't touch all modules at the
+        same time.
+         */
+        if (!WorkflowUtil.switchToDevelopmentBranchOrNotify(this.gitflowGitRepository)) {
+            return false;
+        }
+
         final GitflowErrorsListener errorLineHandler = new GitflowErrorsListener(this.myProject);
         final GitflowGitCommandResult result = this.myGitflow.finishHotfix(this.gitflowGitRepository, hotfixName, tagMessage, errorLineHandler);
 

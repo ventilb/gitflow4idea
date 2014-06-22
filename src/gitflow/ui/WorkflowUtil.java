@@ -112,4 +112,15 @@ public class WorkflowUtil {
 
         return isWorkflowUserInputNameValid;
     }
+
+    public static boolean switchToDevelopmentBranchOrNotify(final GitflowGitRepository gitflowGitRepository) {
+        final Project project = gitflowGitRepository.getProject();
+        final boolean switchToDevelopmentBranchWasSuccessful = gitflowGitRepository.switchToDevelopmentBranch();
+
+        if (!switchToDevelopmentBranchWasSuccessful) {
+            NotifyUtil.notifyError(project, "Error", "Some repositories failed to switch to development branch.");
+        }
+
+        return switchToDevelopmentBranchWasSuccessful;
+    }
 }
