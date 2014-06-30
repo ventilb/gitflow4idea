@@ -3,10 +3,10 @@ package gitflow.git;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
 import git4idea.GitLocalBranch;
-import git4idea.GitRemoteBranch;
 import git4idea.branch.GitBranchUtil;
 import git4idea.branch.GitBrancher;
 import git4idea.repo.GitRepository;
+import gitflow.GitflowBranchUtil;
 import gitflow.GitflowConfigUtil;
 import gitflow.intellij.ProjectAndModules;
 import org.jetbrains.annotations.NotNull;
@@ -47,7 +47,7 @@ public class GitflowGitRepository {
      * Switches all repositories to their configured development branch. Returns TRUE if all repositories are on the
      * same branch after the switch, FALSE otherwise.
      *
-     * @return TRUE if all repositories are on the same branch or FALSE
+     * @return TRUE if all repositories are on the same branch, FALSE otherwise
      */
     public boolean switchToDevelopmentBranch() {
         final GitBrancher brancher = ServiceManager.getService(this.projectAndModules.getProject(), GitBrancher.class);
@@ -55,6 +55,73 @@ public class GitflowGitRepository {
             brancher.checkout(GitflowConfigUtil.getDevelopBranch(gitRepository), Collections.singletonList(gitRepository), null);
         }
         return areAllGitRepositoriesOnSameAndValidBranch();
+    }
+
+    /**
+     * Returns the unique remote release branch names from all repository. It's the intersection of all remote release
+     * branch names of all git repositories.
+     *
+     * @return unique remote release branch names
+     */
+    public Set<String> getUniqueRemoteReleaseBranchNames() {
+        return getUniqueBranchNamesImpl(ALL_REMOTE_RELEASE_BRANCH_NAMES);
+    }
+
+    /**
+     * Returns the unique remote branch names from all repository. It's the intersection of all remote branch names
+     * of all git repositories.
+     *
+     * @return unique remote branch names
+     */
+    @NotNull
+    public Set<String> getUniqueRemoteBranchNames() {
+        return getUniqueBranchNamesImpl(ALL_REMOTE_BRANCH_NAMES);
+    }
+
+    /**
+     * Returns all remote release branch names for the specified git repository. The branch prefix is determined by
+     * the repository configuration.
+     *
+     * @param gitRepository the git repository
+     * @return remote release branch names
+     */
+    @NotNull
+    protected Collection<String> getRemoteReleaseBranchNames(@NotNull final GitRepository gitRepository) {
+        final String repositoryReleasePrefix = GitflowConfigUtil.getReleasePrefix(gitRepository);
+        final Collection<String> allRemoteBranchNames = getRemoteBranchNames(gitRepository);
+
+        return GitflowBranchUtil.filterBranchListByPrefix(allRemoteBranchNames, repositoryReleasePrefix);
+    }
+
+    /**
+     * Returns all remote branch names for the specified git repository.
+     *
+     * @param gitRepository the git repository
+     * @return remote branch names
+     */
+    @NotNull
+    protected Collection<String> getRemoteBranchNames(@NotNull final GitRepository gitRepository) {
+        return GitflowBranchUtil.getRemoteBranchNames(gitRepository);
+    }
+
+    protected Set<String> getUniqueBranchNamesImpl(final BranchNamesSource branchNamesSource) {
+        final Set<String> uniqueRemoteBranchNames = new HashSet<String>();
+        final Set<String>[] remoteBranchesPerRepository = new Set[getRepositoryCount()];
+
+        int remoteBranchesPerRepositoryIndex = 0;
+        for (GitRepository gitRepository : gitRepositories()) {
+            Set<String> remoteBranchNames = new HashSet<String>(branchNamesSource.getBranchNames(this, gitRepository));
+            uniqueRemoteBranchNames.addAll(remoteBranchNames);
+
+            remoteBranchesPerRepository[remoteBranchesPerRepositoryIndex] = remoteBranchNames;
+
+            remoteBranchesPerRepositoryIndex++;
+        }
+
+        for (int i = 0; i < remoteBranchesPerRepositoryIndex; i++) {
+            uniqueRemoteBranchNames.retainAll(remoteBranchesPerRepository[i]);
+        }
+        return uniqueRemoteBranchNames;
     }
 
     /**
@@ -227,5 +294,28 @@ public class GitflowGitRepository {
         for (GitRepository gitRepository : this.gitRepositories) {
             gitRepository.update();
         }
+    }
+
+    // Helpers ////////////////////////////////////////////////////////////////
+
+    /*
+    The interface and it's static implementations are helping us to reduce code redundancy.
+     */
+    protected final static BranchNamesSource ALL_REMOTE_BRANCH_NAMES = new BranchNamesSource() {
+        @Override
+        public Collection<String> getBranchNames(final GitflowGitRepository gitflowGitRepository, final GitRepository gitRepository) {
+            return gitflowGitRepository.getRemoteBranchNames(gitRepository);
+        }
+    };
+
+    protected final static BranchNamesSource ALL_REMOTE_RELEASE_BRANCH_NAMES = new BranchNamesSource() {
+        @Override
+        public Collection<String> getBranchNames(final GitflowGitRepository gitflowGitRepository, final GitRepository gitRepository) {
+            return gitflowGitRepository.getRemoteReleaseBranchNames(gitRepository);
+        }
+    };
+
+    protected interface BranchNamesSource {
+        public Collection<String> getBranchNames(GitflowGitRepository gitflowGitRepository, GitRepository gitRepository);
     }
 }
