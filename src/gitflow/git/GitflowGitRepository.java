@@ -63,6 +63,7 @@ public class GitflowGitRepository {
      *
      * @return unique remote release branch names
      */
+    @NotNull
     public Set<String> getUniqueRemoteReleaseBranchNames() {
         return getUniqueBranchNamesImpl(ALL_REMOTE_RELEASE_BRANCH_NAMES);
     }
@@ -104,7 +105,8 @@ public class GitflowGitRepository {
         return GitflowBranchUtil.getRemoteBranchNames(gitRepository);
     }
 
-    protected Set<String> getUniqueBranchNamesImpl(final BranchNamesSource branchNamesSource) {
+    @NotNull
+    protected Set<String> getUniqueBranchNamesImpl(@NotNull final BranchNamesSource branchNamesSource) {
         final Set<String> uniqueRemoteBranchNames = new HashSet<String>();
         final Set<String>[] remoteBranchesPerRepository = new Set[getRepositoryCount()];
 
@@ -179,6 +181,7 @@ public class GitflowGitRepository {
      *
      * @return all unique hotfix names
      */
+    @NotNull
     public Set<String> getUniqueHotfixNamesFromCurrentBranches() {
         final Set<String> distinctHotfixNames = new HashSet<String>();
 
@@ -206,6 +209,7 @@ public class GitflowGitRepository {
      *
      * @return all unique release names
      */
+    @NotNull
     public Set<String> getUniqueReleaseNamesFromCurrentBranches() {
         final Set<String> distinctReleaseNames = new HashSet<String>();
 
@@ -233,6 +237,7 @@ public class GitflowGitRepository {
      *
      * @return all unique feature names
      */
+    @NotNull
     public Set<String> getUniqueFeatureNamesFromCurrentBranches() {
         final Set<String> distinctFeatureNames = new HashSet<String>();
 
@@ -248,6 +253,7 @@ public class GitflowGitRepository {
         return distinctFeatureNames;
     }
 
+    @NotNull
     public GitflowPerRepositoryReadConfig getGitflowPerRepositoryReadConfig() {
         if (this.gitflowPerRepositoryReadConfigInstance == null) {
             this.gitflowPerRepositoryReadConfigInstance = new GitflowPerRepositoryReadConfig(this);
