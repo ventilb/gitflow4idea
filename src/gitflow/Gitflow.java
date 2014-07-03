@@ -25,24 +25,24 @@ public interface Gitflow extends Git {
     // feature
 
     GitflowGitCommandResult startFeature(@NotNull GitflowGitRepository repository,
-                                  @NotNull String featureName,
-                                  @Nullable GitLineHandlerListener... listeners);
+                                         @NotNull String featureName,
+                                         @Nullable GitLineHandlerListener... listeners);
 
     GitCommandResult startFeature(@NotNull GitRepository repository,
                                   @NotNull String featureName,
                                   @Nullable GitLineHandlerListener... listeners);
 
     GitflowGitCommandResult finishFeature(@NotNull GitflowGitRepository repository,
-                                   @NotNull String featureName,
-                                   @Nullable GitLineHandlerListener... listeners);
+                                          @NotNull String featureName,
+                                          @Nullable GitLineHandlerListener... listeners);
 
     GitCommandResult finishFeature(@NotNull GitRepository repository,
                                    @NotNull String featureName,
                                    @Nullable GitLineHandlerListener... listeners);
 
     GitflowGitCommandResult publishFeature(@NotNull GitflowGitRepository repository,
-                                    @NotNull String featureName,
-                                    @Nullable GitLineHandlerListener... listeners);
+                                           @NotNull String featureName,
+                                           @Nullable GitLineHandlerListener... listeners);
 
     GitCommandResult publishFeature(@NotNull GitRepository repository,
                                     @NotNull String featureName,
@@ -70,9 +70,9 @@ public interface Gitflow extends Git {
 
 
     GitflowGitCommandResult finishRelease(@NotNull GitflowGitRepository repository,
-                                   @NotNull String releaseName,
-                                   @NotNull String tagMessage,
-                                   @Nullable GitLineHandlerListener... listeners);
+                                          @NotNull String releaseName,
+                                          @NotNull String tagMessage,
+                                          @Nullable GitLineHandlerListener... listeners);
 
     GitCommandResult finishRelease(@NotNull GitRepository repository,
                                    @NotNull String releaseName,
@@ -81,12 +81,16 @@ public interface Gitflow extends Git {
 
 
     GitflowGitCommandResult publishRelease(@NotNull GitflowGitRepository repository,
-                                    @NotNull String releaseName,
-                                    @Nullable GitLineHandlerListener... listeners);
+                                           @NotNull String releaseName,
+                                           @Nullable GitLineHandlerListener... listeners);
 
     GitCommandResult publishRelease(@NotNull GitRepository repository,
                                     @NotNull String releaseName,
                                     @Nullable GitLineHandlerListener... listeners);
+
+    GitflowGitCommandResult trackRelease(@NotNull GitflowGitRepository repository,
+                                         @NotNull String remoteBranchName,
+                                         @Nullable GitLineHandlerListener... listeners);
 
     GitCommandResult trackRelease(@NotNull GitRepository repository,
                                   @NotNull String releaseName,
@@ -108,8 +112,8 @@ public interface Gitflow extends Git {
                                          @Nullable GitLineHandlerListener... listeners);
 
     GitflowGitCommandResult publishHotfix(@NotNull GitflowGitRepository repository,
-                                   @NotNull String hotfixName,
-                                   @Nullable GitLineHandlerListener... listeners);
+                                          @NotNull String hotfixName,
+                                          @Nullable GitLineHandlerListener... listeners);
 
     GitCommandResult publishHotfix(@NotNull GitRepository repository,
                                    @NotNull String hotfixName,

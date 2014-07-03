@@ -19,12 +19,13 @@ import java.lang.reflect.Field;
 
 /**
  * Implements a test fixture with an intellij project and one module. The test fixture creates two git repositories.
- * One for the project root and one for the module. It also creates a remote repository for each local repository.
+ * One for the project root and one for the module. It also creates a remote repository for each local repository and
+ * performs a start release, publish release and finish release workflow.
  *
  * @author <a href="mailto:manuel_schulze@i-entwicklung.de">Manuel Schulze</a>
- * @since 16.06.14 - 20:44
+ * @since 03.07.14 - 21:42
  */
-public class TestFixture2 {
+public class TestFixture4 {
 
     public ProjectAndModules projectAndModules;
 
@@ -56,7 +57,7 @@ public class TestFixture2 {
 
     public File moduleRepositoryRemoteRoot;
 
-    public TestFixture2(JavaCodeInsightFixtureTestCase javaCodeInsightFixtureTestCase) {
+    public TestFixture4(JavaCodeInsightFixtureTestCase javaCodeInsightFixtureTestCase) {
         this.javaCodeInsightFixtureTestCase = javaCodeInsightFixtureTestCase;
 
         this.name = this.javaCodeInsightFixtureTestCase.getName();
@@ -133,6 +134,15 @@ public class TestFixture2 {
 
         TestUtils.enableGitflow(this.projectGitRepository, gitflowInitOptions);
         TestUtils.enableGitflow(this.module1GitRepository, gitflowInitOptions);
+
+        TestUtils.startRelease(this.projectGitRepository, "Test-Release");
+        TestUtils.startRelease(this.module1GitRepository, "Test-Release");
+
+        TestUtils.publishRelease(this.projectGitRepository, "Test-Release");
+        TestUtils.publishRelease(this.module1GitRepository, "Test-Release");
+
+        TestUtils.finishRelease(this.projectGitRepository, "Test-Release");
+        TestUtils.finishRelease(this.module1GitRepository, "Test-Release");
 
         Field myFixtureField = JavaCodeInsightFixtureTestCase.class.getDeclaredField("myFixture");
         myFixtureField.setAccessible(true);

@@ -4,11 +4,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.Messages;
-import com.intellij.openapi.vcs.VcsException;
-import com.intellij.openapi.vfs.VirtualFileManager;
 import git4idea.branch.GitBranchUtil;
-import git4idea.merge.GitMerger;
 import git4idea.repo.GitRepository;
 import gitflow.Gitflow;
 import gitflow.GitflowBranchUtil;
@@ -16,9 +12,6 @@ import gitflow.GitflowConfigUtil;
 import gitflow.git.GitflowGitRepository;
 import gitflow.git.GitflowGitRepositoryUtil;
 import gitflow.intellij.ProjectAndModules;
-import gitflow.ui.NotifyUtil;
-
-import java.util.ArrayList;
 
 public class GitflowAction extends DumbAwareAction {
     Project myProject;
@@ -32,8 +25,6 @@ public class GitflowAction extends DumbAwareAction {
 
     @Deprecated
     String featurePrefix;
-    @Deprecated
-    String releasePrefix;
 
     GitflowAction(String actionName){
         super(actionName);
@@ -49,7 +40,6 @@ public class GitflowAction extends DumbAwareAction {
         this.gitflowGitRepository = GitflowGitRepositoryUtil.getAllGitRepositories(projectAndModules);
 
         featurePrefix = GitflowConfigUtil.getFeaturePrefix(myProject);
-        releasePrefix = GitflowConfigUtil.getReleasePrefix(myProject);
     }
 
     public void setProject(Project myProject) {

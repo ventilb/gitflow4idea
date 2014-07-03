@@ -6,7 +6,9 @@ import gitflow.GitflowConfigurable;
 import gitflow.git.GitflowGitRepository;
 import gitflow.models.ReleaseTagMessageOrCancelModel;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -17,7 +19,8 @@ import java.util.Set;
  */
 public class WorkflowUtil {
 
-    public static ReleaseTagMessageOrCancelModel getReleaseTagMessage(final Project project, final String releaseName, final String customtagMessage) {
+    @NotNull
+    public static ReleaseTagMessageOrCancelModel getReleaseTagMessage(@NotNull final Project project, @NotNull final String releaseName, @Nullable final String customtagMessage) {
         final String defaultTagMessage = getDefaultTagMessage(project, releaseName);
 
         boolean cancel = false;
@@ -41,13 +44,44 @@ public class WorkflowUtil {
         return new ReleaseTagMessageOrCancelModel(tagMessage, cancel);
     }
 
-    public static String getDefaultTagMessage(final Project project, final String releaseName) {
+    @NotNull
+    public static String getDefaultTagMessage(@NotNull final Project project, @NotNull final String releaseName) {
         final String defaultTagMessage = GitflowConfigurable.getCustomTagCommitMessage(project);
         return defaultTagMessage.replace("%name%", releaseName);
     }
 
+    @Nullable
+    public static String getUniqueRemoteBranchNameOrNotify(@NotNull final GitflowGitRepository gitflowGitRepository) {
+        final Project project = gitflowGitRepository.getProject();
+        final Collection<String> releaseBranchNames = gitflowGitRepository.getUniqueRemoteReleaseBranchNames();
 
-    public static String getUniqueHotfixNameOrNotify(@NotNull GitflowGitRepository gitflowGitRepository) {
+        String branchName = null;
+
+        if (releaseBranchNames.size() > 0) {
+            branchName = showGitflowBranchChooseDialog(project, releaseBranchNames);
+        } else {
+            NotifyUtil.notifyError(project, "Error", "No remote branches");
+        }
+
+        return branchName;
+    }
+
+    @Nullable
+    public static String showGitflowBranchChooseDialog(@NotNull final Project project, @NotNull final Collection<String> releaseBranchNames) {
+        final GitflowBranchChooseDialog branchChooseDialog = new GitflowBranchChooseDialog(project, releaseBranchNames);
+
+        String branchName = null;
+
+        branchChooseDialog.show();
+        if (branchChooseDialog.isOK()) {
+            branchName = branchChooseDialog.getSelectedBranchName();
+        }
+
+        return branchName;
+    }
+
+    @Nullable
+    public static String getUniqueHotfixNameOrNotify(@NotNull final GitflowGitRepository gitflowGitRepository) {
         final Project project = gitflowGitRepository.getProject();
 
         final Set<String> uniqueHotfixNames = gitflowGitRepository.getUniqueHotfixNamesFromCurrentBranches();
@@ -60,7 +94,8 @@ public class WorkflowUtil {
         return uniqueHotfixNames.iterator().next();
     }
 
-    public static String getUniqueReleaseNameOrNotify(@NotNull GitflowGitRepository gitflowGitRepository) {
+    @Nullable
+    public static String getUniqueReleaseNameOrNotify(@NotNull final GitflowGitRepository gitflowGitRepository) {
         final Project project = gitflowGitRepository.getProject();
 
         final Set<String> uniqueReleaseNames = gitflowGitRepository.getUniqueReleaseNamesFromCurrentBranches();
@@ -73,7 +108,8 @@ public class WorkflowUtil {
         return uniqueReleaseNames.iterator().next();
     }
 
-    public static String getUniqueFeatureNameOrNotify(@NotNull GitflowGitRepository gitflowGitRepository) {
+    @Nullable
+    public static String getUniqueFeatureNameOrNotify(@NotNull final GitflowGitRepository gitflowGitRepository) {
         final Project project = gitflowGitRepository.getProject();
 
         final Set<String> uniqueFeatureNames = gitflowGitRepository.getUniqueFeatureNamesFromCurrentBranches();

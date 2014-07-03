@@ -372,6 +372,29 @@ public class GitflowImpl extends GitImpl implements Gitflow {
         return run(h);
     }
 
+    @Override
+    @NotNull
+    public GitflowGitCommandResult trackRelease(@NotNull GitflowGitRepository gitflowGitRepository, @NotNull String remoteBranchName, @Nullable GitLineHandlerListener... listeners) {
+        final GitflowGitCommandResult gitflowGitCommandResult = new GitflowGitCommandResult();
+
+        GitCommandResult gitCommandResult;
+        for (GitRepository gitRepository : gitflowGitRepository.gitRepositories()) {
+            gitCommandResult = trackReleaseByRemoteBranchName(gitRepository, remoteBranchName, listeners);
+            gitflowGitCommandResult.setGitCommandResultForGitRepository(gitRepository, gitCommandResult);
+        }
+
+        return gitflowGitCommandResult;
+    }
+
+    @NotNull
+    public GitCommandResult trackReleaseByRemoteBranchName(@NotNull GitRepository repository,
+                                                           @NotNull String remoteBranchName,
+                                                           @Nullable GitLineHandlerListener... listeners) {
+        final String releaseName = GitflowConfigUtil.getReleaseNameFromBranchName(repository, remoteBranchName);
+        return trackRelease(repository, releaseName, listeners);
+    }
+
+    @NotNull
     public GitCommandResult trackRelease(@NotNull GitRepository repository,
                                          @NotNull String releaseName,
                                          @Nullable GitLineHandlerListener... listeners) {

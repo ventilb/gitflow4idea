@@ -217,7 +217,7 @@ public class GitflowGitRepository {
         String currentBranchName;
         for (GitRepository gitRepository : gitRepositories()) {
             currentBranchName = GitBranchUtil.getBranchNameOrRev(gitRepository);
-            releaseName = GitflowConfigUtil.getReleaseNameFromBranch(gitRepository, currentBranchName);
+            releaseName = GitflowConfigUtil.getReleaseNameFromBranchName(gitRepository, currentBranchName);
 
             distinctReleaseNames.add(releaseName);
         }

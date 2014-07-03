@@ -114,42 +114,48 @@ public class TestUtils {
         final Gitflow gitflow = ServiceManager.getService(Gitflow.class);
         final GitCommandResult gitCommandResult = gitflow.initRepo(gitRepository, gitflowInitOptions);
 
-        // Sync file system state with intellij's virtual file system. Otherwise the changes might not be visible.
-        syncFileSystem();
-        syncProjectRepositories(gitRepository.getProject());
-
-        assertThat(gitCommandResult.success(), is(true));
+        syncAllAndAssertGitCommandResult(gitRepository.getProject(), gitCommandResult);
     }
 
     public static void startHotfix(final GitRepository gitRepository, final String hotfixName) {
         final Gitflow gitflow = ServiceManager.getService(Gitflow.class);
         final GitCommandResult gitCommandResult = gitflow.startHotfix(gitRepository, hotfixName);
 
-        // Sync file system state with intellij's virtual file system. Otherwise the changes might not be visible.
-        syncFileSystem();
-        syncProjectRepositories(gitRepository.getProject());
-
-        assertThat(gitCommandResult.success(), is(true));
+        syncAllAndAssertGitCommandResult(gitRepository.getProject(), gitCommandResult);
     }
 
     public static void startRelease(final GitRepository gitRepository, final String releaseName) {
         final Gitflow gitflow = ServiceManager.getService(Gitflow.class);
         final GitCommandResult gitCommandResult = gitflow.startRelease(gitRepository, releaseName);
 
-        // Sync file system state with intellij's virtual file system. Otherwise the changes might not be visible.
-        syncFileSystem();
-        syncProjectRepositories(gitRepository.getProject());
+        syncAllAndAssertGitCommandResult(gitRepository.getProject(), gitCommandResult);
+    }
 
-        assertThat(gitCommandResult.success(), is(true));
+    public static void publishRelease(final GitRepository gitRepository, final String releaseName) {
+        final Gitflow gitflow = ServiceManager.getService(Gitflow.class);
+        final GitCommandResult gitCommandResult = gitflow.publishRelease(gitRepository, releaseName);
+
+        syncAllAndAssertGitCommandResult(gitRepository.getProject(), gitCommandResult);
+    }
+
+    public static void finishRelease(final GitRepository gitRepository, final String releaseName) {
+        final Gitflow gitflow = ServiceManager.getService(Gitflow.class);
+        final GitCommandResult gitCommandResult = gitflow.finishRelease(gitRepository, releaseName, "* Test release is finished");
+
+        syncAllAndAssertGitCommandResult(gitRepository.getProject(), gitCommandResult);
     }
 
     public static void startFeature(final GitRepository gitRepository, final String featureName) {
         final Gitflow gitflow = ServiceManager.getService(Gitflow.class);
         final GitCommandResult gitCommandResult = gitflow.startFeature(gitRepository, featureName);
 
+        syncAllAndAssertGitCommandResult(gitRepository.getProject(), gitCommandResult);
+    }
+
+    protected static void syncAllAndAssertGitCommandResult(final Project project, final GitCommandResult gitCommandResult) {
         // Sync file system state with intellij's virtual file system. Otherwise the changes might not be visible.
         syncFileSystem();
-        syncProjectRepositories(gitRepository.getProject());
+        syncProjectRepositories(project);
 
         assertThat(gitCommandResult.success(), is(true));
     }

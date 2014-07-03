@@ -3,18 +3,14 @@ package gitflow.actions;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
-import git4idea.commands.GitCommandResult;
-import gitflow.GitflowConfigUtil;
-import gitflow.ui.GitflowBranchChooseDialog;
+import gitflow.git.GitflowGitCommandResult;
 import gitflow.ui.NotifyUtil;
+import gitflow.ui.WorkflowUtil;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.ArrayList;
-import java.util.Iterator;
 
 public class TrackReleaseAction extends GitflowAction {
 
-    TrackReleaseAction(){
+    TrackReleaseAction() {
         super("Track Release");
     }
 
@@ -22,47 +18,38 @@ public class TrackReleaseAction extends GitflowAction {
     public void actionPerformed(AnActionEvent e) {
         super.actionPerformed(e);
 
-        ArrayList<String> remoteBranches = branchUtil.getRemoteBranchNames();
-        ArrayList<String> remoteReleaseBranches = new ArrayList<String>();
-
-        //get only the branches with the proper prefix
-        for(Iterator<String> i = remoteBranches.iterator(); i.hasNext(); ) {
-            String item = i.next();
-            if (item.contains(releasePrefix)){
-                remoteReleaseBranches.add(item);
-            }
-        }
-
-        if (remoteBranches.size()>0){
-            GitflowBranchChooseDialog branchChoose = new GitflowBranchChooseDialog(myProject,remoteReleaseBranches);
-
-            branchChoose.show();
-            if (branchChoose.isOK()){
-                String branchName= branchChoose.getSelectedBranchName();
-                final String releaseName= GitflowConfigUtil.getReleaseNameFromBranch(myProject, branchName);
-                final GitflowErrorsListener errorLineHandler = new GitflowErrorsListener(myProject);
-
-                new Task.Backgroundable(myProject,"Tracking release "+releaseName,false){
-                    @Override
-                    public void run(@NotNull ProgressIndicator indicator) {
-                        GitCommandResult result = myGitflow.trackRelease(repo, releaseName, errorLineHandler);
-
-                        if (result.success()) {
-                            String trackedReleaseMessage = String.format(" A new remote tracking branch '%s%s' was created", releasePrefix, releaseName);
-                            NotifyUtil.notifySuccess(myProject, releaseName, trackedReleaseMessage);
-                        }
-                        else {
-                            NotifyUtil.notifyError(myProject, "Error", "Please have a look at the Version Control console for more details");
-                        }
-
-                        repo.update();
-                    }
-                }.queue();
-            }
-        }
-        else {
-            NotifyUtil.notifyError(myProject, "Error", "No remote branches");
-        }
-
+        performTrackReleaseActionInBackground();
     }
+
+    protected void performTrackReleaseActionInBackground() {
+        final String remoteBranchName = WorkflowUtil.getUniqueRemoteBranchNameOrNotify(this.gitflowGitRepository);
+
+        if (remoteBranchName != null) {
+            new Task.Backgroundable(this.myProject, "Tracking release for remote branch " + remoteBranchName, false) {
+                @Override
+                public void run(@NotNull ProgressIndicator indicator) {
+                    performTrackReleaseCommand(remoteBranchName);
+                }
+            }.queue();
+        }
+    }
+
+    protected boolean performTrackReleaseCommand(final String remoteBranchName) {
+        final GitflowErrorsListener errorLineHandler = new GitflowErrorsListener(this.myProject);
+
+        final GitflowGitCommandResult result = this.myGitflow.trackRelease(this.gitflowGitRepository, remoteBranchName, errorLineHandler);
+
+        final boolean performTrackReleaseCommandWasSuccessful = result.success();
+
+        if (performTrackReleaseCommandWasSuccessful) {
+            NotifyUtil.notifyGitflowReleaseCommandSuccess(this.gitflowGitRepository, "Tracking the remote branch '%s' was successful:", remoteBranchName);
+        } else {
+            NotifyUtil.notifyGitflowReleaseCommandFailed(this.gitflowGitRepository, "Tracking the remote branch '%s' failed:", remoteBranchName, result);
+        }
+
+        this.gitflowGitRepository.update();
+
+        return performTrackReleaseCommandWasSuccessful;
+    }
+
 }

@@ -5,10 +5,10 @@ import com.intellij.openapi.ui.DialogWrapper;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.util.List;
+import java.util.Collection;
 
 /**
- *  Dialog for choosing branches
+ * Dialog for choosing branches
  *
  * @author Opher Vishnia / opherv.com / opherv@gmail.com
  */
@@ -18,7 +18,7 @@ public class GitflowBranchChooseDialog extends DialogWrapper {
     private JList branchList;
 
 
-    public GitflowBranchChooseDialog(Project project, List<String> branchNames) {
+    public GitflowBranchChooseDialog(final Project project, final Collection<String> branchNames) {
         super(project, true);
 
         setModal(true);
@@ -35,7 +35,7 @@ public class GitflowBranchChooseDialog extends DialogWrapper {
         return contentPane;
     }
 
-    public String getSelectedBranchName(){
+    public String getSelectedBranchName() {
         return branchList.getSelectedValue().toString();
     }
 }

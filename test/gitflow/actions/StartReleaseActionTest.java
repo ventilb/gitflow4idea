@@ -1,6 +1,5 @@
 package gitflow.actions;
 
-import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.testFramework.fixtures.JavaCodeInsightFixtureTestCase;
 import git4idea.GitUtil;
 import git4idea.repo.GitRepository;

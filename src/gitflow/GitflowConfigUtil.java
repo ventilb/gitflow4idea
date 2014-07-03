@@ -7,6 +7,7 @@ import git4idea.branch.GitBranchUtil;
 import git4idea.config.GitConfigUtil;
 import git4idea.repo.GitRepository;
 import gitflow.ui.NotifyUtil;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @author Opher Vishnia / opherv.com / opherv@gmail.com
@@ -163,30 +164,23 @@ public class GitflowConfigUtil {
         return branchName.substring(branchName.indexOf(featurePrefix) + featurePrefix.length(), branchName.length());
     }
 
-    @Deprecated
-    public static String getReleaseNameFromBranch(Project project, String branchName) {
-        String releasePrefix = GitflowConfigUtil.getReleasePrefix(project);
-        return branchName.substring(branchName.indexOf(releasePrefix) + releasePrefix.length(), branchName.length());
-    }
-
-    public static String getReleaseNameFromBranch(final GitRepository gitRepository, final String branchName) {
+    /**
+     * Returns the release name for the specified git repository and branch name. The release name is determined by
+     * evaluating the gitflow configuration for the git repository.
+     *
+     * @param gitRepository the git repository
+     * @param branchName the branch name
+     * @return release name from branch name
+     */
+    @NotNull
+    public static String getReleaseNameFromBranchName(@NotNull final GitRepository gitRepository, @NotNull final String branchName) {
         final String releasePrefix = GitflowConfigUtil.getReleasePrefix(gitRepository);
         return branchName.substring(branchName.indexOf(releasePrefix) + releasePrefix.length(), branchName.length());
-    }
-
-    @Deprecated
-    public static String getHotfixNameFromBranch(Project project, String branchName) {
-        String hotfixPrefix = GitflowConfigUtil.getHotfixPrefix(project);
-        return branchName.substring(branchName.indexOf(hotfixPrefix) + hotfixPrefix.length(), branchName.length());
     }
 
     public static String getHotfixNameFromBranch(final GitRepository gitRepository, final String branchName) {
         final String hotfixPrefix = GitflowConfigUtil.getHotfixPrefix(gitRepository);
         return branchName.substring(branchName.indexOf(hotfixPrefix) + hotfixPrefix.length(), branchName.length());
-    }
-
-    public static String getRemoteNameFromBranch(Project project, String branchName) {
-        return branchName.substring(0, branchName.indexOf("/"));
     }
 
     /**
