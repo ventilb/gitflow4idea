@@ -32,7 +32,12 @@ public class FinishHotfixAction extends GitflowAction {
             String defaultTagMessage = GitflowConfigurable.getCustomHotfixTagCommitMessage(this.myProject);
             defaultTagMessage = defaultTagMessage.replace("%name%", hotfixName);
 
-            final String tagMessage = Messages.showInputDialog(this.myProject, "Enter the tag message:", "Finish Hotfix", Messages.getQuestionIcon(), defaultTagMessage, null);
+            final String tagMessage;
+            if (GitflowConfigurable.dontTagHotfix(myProject)) {
+                tagMessage = "";
+            } else {
+                tagMessage = Messages.showInputDialog(this.myProject, "Enter the tag message:", "Finish Hotfix", Messages.getQuestionIcon(), defaultTagMessage, null);
+            }
 
             if (tagMessage != null) {
                 new Task.Backgroundable(this.myProject, "Finishing hotfix " + hotfixName, false) {
