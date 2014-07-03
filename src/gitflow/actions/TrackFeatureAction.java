@@ -15,7 +15,7 @@ import java.util.Iterator;
 
 public class TrackFeatureAction extends GitflowAction {
 
-    TrackFeatureAction(){
+    public TrackFeatureAction(){
         super("Track Feature");
     }
 

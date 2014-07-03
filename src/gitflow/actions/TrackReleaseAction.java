@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class TrackReleaseAction extends GitflowAction {
 
-    TrackReleaseAction() {
+    public TrackReleaseAction() {
         super("Track Release");
     }
 

@@ -9,7 +9,7 @@ import gitflow.ui.WorkflowUtil;
 import org.jetbrains.annotations.NotNull;
 
 public class PublishHotfixAction extends GitflowAction {
-    PublishHotfixAction() {
+    public PublishHotfixAction() {
         super("Publish Hotfix");
     }
 

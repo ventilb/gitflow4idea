@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class InitRepoAction extends GitflowAction {
 
-    InitRepoAction() {
+    public InitRepoAction() {
         super("Init Repo");
     }
 

@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class PublishReleaseAction extends GitflowAction {
 
-    PublishReleaseAction() {
+    public PublishReleaseAction() {
         super("Publish Release");
     }
 

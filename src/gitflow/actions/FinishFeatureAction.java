@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class FinishFeatureAction extends GitflowAction {
 
-    FinishFeatureAction() {
+    public FinishFeatureAction() {
         super("Finish Feature");
     }
 

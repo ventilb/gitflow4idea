@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class StartFeatureAction extends GitflowAction {
 
-    StartFeatureAction() {
+    public StartFeatureAction() {
         super("Start Feature");
     }
 

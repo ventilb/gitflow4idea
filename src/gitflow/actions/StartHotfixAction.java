@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class StartHotfixAction extends GitflowAction {
 
-    StartHotfixAction() {
+    public StartHotfixAction() {
         super("Start Hotfix");
     }
 
