@@ -152,6 +152,20 @@ public class TestUtils {
         syncAllAndAssertGitCommandResult(gitRepository.getProject(), gitCommandResult);
     }
 
+    public static void publishFeature(final GitRepository gitRepository, final String featureName) {
+        final Gitflow gitflow = ServiceManager.getService(Gitflow.class);
+        final GitCommandResult gitCommandResult = gitflow.publishFeature(gitRepository, featureName);
+
+        syncAllAndAssertGitCommandResult(gitRepository.getProject(), gitCommandResult);
+    }
+
+    public static void finishFeature(final GitRepository gitRepository, final String featureName) {
+        final Gitflow gitflow = ServiceManager.getService(Gitflow.class);
+        final GitCommandResult gitCommandResult = gitflow.finishFeature(gitRepository, featureName);
+
+        syncAllAndAssertGitCommandResult(gitRepository.getProject(), gitCommandResult);
+    }
+
     protected static void syncAllAndAssertGitCommandResult(final Project project, final GitCommandResult gitCommandResult) {
         // Sync file system state with intellij's virtual file system. Otherwise the changes might not be visible.
         syncFileSystem();

@@ -403,6 +403,178 @@ public class GitflowGitRepositoryTest extends JavaCodeInsightFixtureTestCase {
         assertThat(uniqueRemoteReleaseBranchNames, IsEmptyCollection.empty());
     }
 
+    public void testGetUniqueRemoteFeatureBranchNames_test1() throws Exception {
+        // Testfix erstellen
+        final ProjectAndModules projectAndModules = new ProjectAndModules(new ProjectStub(), Module.EMPTY_ARRAY);
+
+        final GitRepository gitRepository1 = new GitRepositoryStub();
+        final GitRepository gitRepository2 = new GitRepositoryStub();
+        final GitRepository gitRepository3 = new GitRepositoryStub();
+        final GitRepository gitRepository4 = new GitRepositoryStub();
+
+        final ArrayList<String> branchNames1 = new ArrayList<String>(Arrays.asList("branch1", "branch2", "branch3"));
+        final ArrayList<String> branchNames2 = new ArrayList<String>(Arrays.asList("branch1", "branch2", "branch3"));
+        final ArrayList<String> branchNames3 = new ArrayList<String>(Arrays.asList("branch2", "branch3"));
+        final ArrayList<String> branchNames4 = new ArrayList<String>(Arrays.asList("branch2", "branch1"));
+
+        // Test durchführen
+        final GitflowGitRepository gitflowGitRepository = new GitflowGitRepository(projectAndModules) {
+            @Override
+            protected java.util.Collection<String> getRemoteFeatureBranchNames(GitRepository gitRepository) {
+                if (gitRepository == gitRepository1) {
+                    return branchNames1;
+                } else if (gitRepository == gitRepository2) {
+                    return branchNames2;
+                } else if (gitRepository == gitRepository3) {
+                    return branchNames3;
+                } else if (gitRepository == gitRepository4) {
+                    return branchNames4;
+                } else {
+                    fail();
+                    return null;
+                }
+            }
+        };
+        gitflowGitRepository.addGitRepository(gitRepository1);
+        gitflowGitRepository.addGitRepository(gitRepository2);
+        gitflowGitRepository.addGitRepository(gitRepository3);
+        gitflowGitRepository.addGitRepository(gitRepository4);
+
+        final Set<String> uniqueRemoteFeatureBranchNames = gitflowGitRepository.getUniqueRemoteFeatureBranchNames();
+
+        // Test auswerten
+        assertThat(uniqueRemoteFeatureBranchNames, hasItem("branch2"));
+    }
+
+    public void testGetUniqueRemoteFeatureBranchNames_test2() throws Exception {
+        // Testfixture erstellen
+        final ProjectAndModules projectAndModules = new ProjectAndModules(new ProjectStub(), Module.EMPTY_ARRAY);
+
+        final GitRepository gitRepository1 = new GitRepositoryStub();
+        final GitRepository gitRepository2 = new GitRepositoryStub();
+        final GitRepository gitRepository3 = new GitRepositoryStub();
+        final GitRepository gitRepository4 = new GitRepositoryStub();
+
+        final ArrayList<String> branchNames1 = new ArrayList<String>(Arrays.asList("branch1", "branch2", "branch3"));
+        final ArrayList<String> branchNames2 = new ArrayList<String>(Arrays.asList("branch1", "branch2", "branch3"));
+        final ArrayList<String> branchNames3 = new ArrayList<String>(Arrays.asList("branch4", "branch3"));
+        final ArrayList<String> branchNames4 = new ArrayList<String>(Arrays.asList("branch2", "branch1"));
+
+        // Test durchführen
+        final GitflowGitRepository gitflowGitRepository = new GitflowGitRepository(projectAndModules) {
+            @Override
+            protected java.util.Collection<String> getRemoteFeatureBranchNames(GitRepository gitRepository) {
+                if (gitRepository == gitRepository1) {
+                    return branchNames1;
+                } else if (gitRepository == gitRepository2) {
+                    return branchNames2;
+                } else if (gitRepository == gitRepository3) {
+                    return branchNames3;
+                } else if (gitRepository == gitRepository4) {
+                    return branchNames4;
+                } else {
+                    fail();
+                    return null;
+                }
+            }
+        };
+        gitflowGitRepository.addGitRepository(gitRepository1);
+        gitflowGitRepository.addGitRepository(gitRepository2);
+        gitflowGitRepository.addGitRepository(gitRepository3);
+        gitflowGitRepository.addGitRepository(gitRepository4);
+
+        final Set<String> uniqueRemoteFeatureBranchNames = gitflowGitRepository.getUniqueRemoteFeatureBranchNames();
+
+        // Test auswerten
+        assertThat(uniqueRemoteFeatureBranchNames, IsEmptyCollection.empty());
+    }
+
+    public void testGetUniqueRemoteFeatureBranchNames_test3() throws Exception {
+        // Testfixture erstellen
+        final ProjectAndModules projectAndModules = new ProjectAndModules(new ProjectStub(), Module.EMPTY_ARRAY);
+
+        final GitRepository gitRepository1 = new GitRepositoryStub();
+        final GitRepository gitRepository2 = new GitRepositoryStub();
+        final GitRepository gitRepository3 = new GitRepositoryStub();
+        final GitRepository gitRepository4 = new GitRepositoryStub();
+
+        final ArrayList<String> branchNames1 = new ArrayList<String>(Arrays.asList("branch1", "branch2"));
+        final ArrayList<String> branchNames2 = new ArrayList<String>(Arrays.asList("branch1", "branch2", "branch3"));
+        final ArrayList<String> branchNames3 = new ArrayList<String>(Arrays.asList("branch2", "branch1"));
+        final ArrayList<String> branchNames4 = new ArrayList<String>(Arrays.asList("branch2", "branch1"));
+
+        // Test durchführen
+        final GitflowGitRepository gitflowGitRepository = new GitflowGitRepository(projectAndModules) {
+            @Override
+            protected java.util.Collection<String> getRemoteFeatureBranchNames(GitRepository gitRepository) {
+                if (gitRepository == gitRepository1) {
+                    return branchNames1;
+                } else if (gitRepository == gitRepository2) {
+                    return branchNames2;
+                } else if (gitRepository == gitRepository3) {
+                    return branchNames3;
+                } else if (gitRepository == gitRepository4) {
+                    return branchNames4;
+                } else {
+                    fail();
+                    return null;
+                }
+            }
+        };
+        gitflowGitRepository.addGitRepository(gitRepository1);
+        gitflowGitRepository.addGitRepository(gitRepository2);
+        gitflowGitRepository.addGitRepository(gitRepository3);
+        gitflowGitRepository.addGitRepository(gitRepository4);
+
+        final Set<String> uniqueRemoteFeatureBranchNames = gitflowGitRepository.getUniqueRemoteFeatureBranchNames();
+
+        // Test auswerten
+        assertThat(uniqueRemoteFeatureBranchNames, containsInAnyOrder("branch1", "branch2"));
+    }
+
+    public void testGetUniqueRemoteFeatureBranchNames_test4() throws Exception {
+        // Testfixture erstellen
+        final ProjectAndModules projectAndModules = new ProjectAndModules(new ProjectStub(), Module.EMPTY_ARRAY);
+
+        final GitRepository gitRepository1 = new GitRepositoryStub();
+        final GitRepository gitRepository2 = new GitRepositoryStub();
+        final GitRepository gitRepository3 = new GitRepositoryStub();
+        final GitRepository gitRepository4 = new GitRepositoryStub();
+
+        final ArrayList<String> branchNames1 = new ArrayList<String>();
+        final ArrayList<String> branchNames2 = new ArrayList<String>(Arrays.asList("branch1", "branch2", "branch3"));
+        final ArrayList<String> branchNames3 = new ArrayList<String>(Arrays.asList("branch2", "branch1"));
+        final ArrayList<String> branchNames4 = new ArrayList<String>(Arrays.asList("branch2", "branch1"));
+
+        // Test durchführen
+        final GitflowGitRepository gitflowGitRepository = new GitflowGitRepository(projectAndModules) {
+            @Override
+            protected java.util.Collection<String> getRemoteFeatureBranchNames(GitRepository gitRepository) {
+                if (gitRepository == gitRepository1) {
+                    return branchNames1;
+                } else if (gitRepository == gitRepository2) {
+                    return branchNames2;
+                } else if (gitRepository == gitRepository3) {
+                    return branchNames3;
+                } else if (gitRepository == gitRepository4) {
+                    return branchNames4;
+                } else {
+                    fail();
+                    return null;
+                }
+            }
+        };
+        gitflowGitRepository.addGitRepository(gitRepository1);
+        gitflowGitRepository.addGitRepository(gitRepository2);
+        gitflowGitRepository.addGitRepository(gitRepository3);
+        gitflowGitRepository.addGitRepository(gitRepository4);
+
+        final Set<String> uniqueRemoteFeatureBranchNames = gitflowGitRepository.getUniqueRemoteFeatureBranchNames();
+
+        // Test auswerten
+        assertThat(uniqueRemoteFeatureBranchNames, IsEmptyCollection.empty());
+    }
+
     private TestFixture1 testFixture1;
 
     @Override

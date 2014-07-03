@@ -51,14 +51,27 @@ public class WorkflowUtil {
     }
 
     @Nullable
-    public static String getUniqueRemoteBranchNameOrNotify(@NotNull final GitflowGitRepository gitflowGitRepository) {
+    public static String getUniqueRemoteReleaseBranchNameOrNotify(@NotNull final GitflowGitRepository gitflowGitRepository) {
         final Project project = gitflowGitRepository.getProject();
         final Collection<String> releaseBranchNames = gitflowGitRepository.getUniqueRemoteReleaseBranchNames();
 
+        return askForGitflowBranchOrNotify(project, releaseBranchNames);
+    }
+
+    @Nullable
+    public static String getUniqueRemoteFeatureBranchNameOrNotify(@NotNull final GitflowGitRepository gitflowGitRepository) {
+        final Project project = gitflowGitRepository.getProject();
+        final Collection<String> featureBranchNames = gitflowGitRepository.getUniqueRemoteFeatureBranchNames();
+
+        return askForGitflowBranchOrNotify(project, featureBranchNames);
+    }
+
+    @Nullable
+    public static String askForGitflowBranchOrNotify(@NotNull final Project project, @NotNull final Collection<String> branchNames) {
         String branchName = null;
 
-        if (releaseBranchNames.size() > 0) {
-            branchName = showGitflowBranchChooseDialog(project, releaseBranchNames);
+        if (branchNames.size() > 0) {
+            branchName = showGitflowBranchChooseDialog(project, branchNames);
         } else {
             NotifyUtil.notifyError(project, "Error", "No remote branches");
         }

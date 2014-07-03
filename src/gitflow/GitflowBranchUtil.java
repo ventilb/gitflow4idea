@@ -1,6 +1,7 @@
 package gitflow;
 
 import com.intellij.openapi.project.Project;
+import com.sun.istack.internal.Nullable;
 import git4idea.GitLocalBranch;
 import git4idea.GitRemoteBranch;
 import git4idea.branch.GitBranchUtil;
@@ -37,15 +38,6 @@ public class GitflowBranchUtil {
         prefixFeature = GitflowConfigUtil.getFeaturePrefix(project);
         prefixRelease = GitflowConfigUtil.getReleasePrefix(project);
         prefixHotfix = GitflowConfigUtil.getHotfixPrefix(project);
-    }
-
-    public GitflowBranchUtil(final GitRepository gitRepository) {
-        this.repo = gitRepository;
-        this.myProject = gitRepository.getProject();
-
-        this.currentBranchName = GitBranchUtil.getBranchNameOrRev(this.repo);
-        branchnameMaster = GitflowConfigUtil.getMasterBranch(this.repo);
-        // TODO Alles prüfen
     }
 
     /**
@@ -180,14 +172,15 @@ public class GitflowBranchUtil {
     }
 
 
-    public GitRemote getRemoteByBranch(String branchName) {
+    @Nullable
+    public static GitRemote getGitRemoteByBranchName(@NotNull final GitRepository gitRepository, @NotNull final String branchName) {
         GitRemote remote = null;
 
-        ArrayList<GitRemoteBranch> remoteBranches = new ArrayList<GitRemoteBranch>(repo.getBranches().getRemoteBranches());
+        ArrayList<GitRemoteBranch> remoteBranches = new ArrayList<GitRemoteBranch>(gitRepository.getBranches().getRemoteBranches());
 
         for (Iterator<GitRemoteBranch> i = remoteBranches.iterator(); i.hasNext(); ) {
             GitRemoteBranch branch = i.next();
-            if (branch.getName() == branchName) {
+            if (branch.getNameForRemoteOperations().equals(branchName)) {
                 remote = branch.getRemote();
                 break;
             }

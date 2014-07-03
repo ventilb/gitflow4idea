@@ -69,6 +69,17 @@ public class GitflowGitRepository {
     }
 
     /**
+     * Returns the unique remote feature branch names from all repository. It's the intersection of all remote feature
+     * branch names of all git repositories.
+     *
+     * @return unique remote feature branch names
+     */
+    @NotNull
+    public Set<String> getUniqueRemoteFeatureBranchNames() {
+        return getUniqueBranchNamesImpl(ALL_REMOTE_FEATURE_BRANCH_NAMES);
+    }
+
+    /**
      * Returns the unique remote branch names from all repository. It's the intersection of all remote branch names
      * of all git repositories.
      *
@@ -92,6 +103,21 @@ public class GitflowGitRepository {
         final Collection<String> allRemoteBranchNames = getRemoteBranchNames(gitRepository);
 
         return GitflowBranchUtil.filterBranchListByPrefix(allRemoteBranchNames, repositoryReleasePrefix);
+    }
+
+    /**
+     * Returns all remote feature branch names for the specified git repository. The branch prefix is determined by
+     * the repository configuration.
+     *
+     * @param gitRepository the git repository
+     * @return remote feature branch names
+     */
+    @NotNull
+    protected Collection<String> getRemoteFeatureBranchNames(@NotNull final GitRepository gitRepository) {
+        final String repositoryFeaturePrefix = GitflowConfigUtil.getFeaturePrefix(gitRepository);
+        final Collection<String> allRemoteBranchNames = getRemoteBranchNames(gitRepository);
+
+        return GitflowBranchUtil.filterBranchListByPrefix(allRemoteBranchNames, repositoryFeaturePrefix);
     }
 
     /**
@@ -318,6 +344,13 @@ public class GitflowGitRepository {
         @Override
         public Collection<String> getBranchNames(final GitflowGitRepository gitflowGitRepository, final GitRepository gitRepository) {
             return gitflowGitRepository.getRemoteReleaseBranchNames(gitRepository);
+        }
+    };
+
+    protected final static BranchNamesSource ALL_REMOTE_FEATURE_BRANCH_NAMES = new BranchNamesSource() {
+        @Override
+        public Collection<String> getBranchNames(final GitflowGitRepository gitflowGitRepository, final GitRepository gitRepository) {
+            return gitflowGitRepository.getRemoteFeatureBranchNames(gitRepository);
         }
     };
 

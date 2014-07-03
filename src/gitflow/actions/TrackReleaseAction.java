@@ -22,7 +22,7 @@ public class TrackReleaseAction extends GitflowAction {
     }
 
     protected void performTrackReleaseActionInBackground() {
-        final String remoteBranchName = WorkflowUtil.getUniqueRemoteBranchNameOrNotify(this.gitflowGitRepository);
+        final String remoteBranchName = WorkflowUtil.getUniqueRemoteReleaseBranchNameOrNotify(this.gitflowGitRepository);
 
         if (remoteBranchName != null) {
             new Task.Backgroundable(this.myProject, "Tracking release for remote branch " + remoteBranchName, false) {
